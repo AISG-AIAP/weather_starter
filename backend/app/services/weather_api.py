@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 import httpx
 
-from app.schemas import WeatherSnapshot
-
 
 class WeatherProviderError(Exception):
     pass
@@ -11,10 +9,10 @@ class WeatherProviderError(Exception):
 
 @dataclass
 class SingaporeWeatherClient:
-    base_url: str
-    two_hour_path: str
-    timeout_seconds: float
-    user_agent: str
+    base_url: str = "https://api-open.data.gov.sg"
+    two_hour_path: str = "/v2/real-time/api/two-hr-forecast"
+    timeout_seconds: float = 8.0
+    user_agent: str = "weather-starter/0.1 (educational project)"
     api_key: str | None = None
 
     def fetch_latest_forecast_payload(self) -> dict:
@@ -28,13 +26,13 @@ class SingaporeWeatherClient:
         with httpx.Client(timeout=self.timeout_seconds, headers=headers) as client:
             return self._fetch_json(client, f"{self.base_url}{self.two_hour_path}")
 
-    def get_current_weather(self, latitude: float, longitude: float) -> WeatherSnapshot:
+    def get_current_weather(self, latitude: float, longitude: float) -> dict:
         payload = self.fetch_latest_forecast_payload()
         return self.snapshot_from_payload(payload, latitude, longitude)
 
     def snapshot_from_payload(
         self, payload: dict, latitude: float, longitude: float
-    ) -> WeatherSnapshot:
+    ) -> dict:
         if isinstance(payload, dict) and payload.get("code") not in (None, 0):
             message = payload.get("errorMsg") or "Weather provider returned an error"
             raise WeatherProviderError(message)
@@ -67,16 +65,15 @@ class SingaporeWeatherClient:
             area = fallback.get("area")
             condition = fallback.get("forecast") or "Unknown"
 
-        return WeatherSnapshot(
-            temperature_c=None,
-            condition=condition,
-            humidity_percent=None,
-            wind_kph=None,
-            observed_at=latest_item.get("update_timestamp") or latest_item.get("timestamp") or "",
-            source="api-open.data.gov.sg",
-            area=area,
-            valid_period_text=latest_item.get("valid_period", {}).get("text"),
-        )
+        return {
+            "condition": condition,
+            "observed_at": latest_item.get("update_timestamp")
+            or latest_item.get("timestamp")
+            or "",
+            "source": "api-open.data.gov.sg",
+            "area": area,
+            "valid_period_text": latest_item.get("valid_period", {}).get("text"),
+        }
 
     @staticmethod
     def _fetch_json(client: httpx.Client, url: str) -> dict:

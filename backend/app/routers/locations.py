@@ -1,126 +1,125 @@
+import os
+import sqlite3
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, status
 
-from app.config import get_settings
-from app.database import get_db
-from app.models import Location
-from app.schemas import LocationCreate, LocationListResponse, LocationRead, WeatherSnapshot
 from app.services.weather_api import SingaporeWeatherClient, WeatherProviderError
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
-
-def get_weather_client() -> SingaporeWeatherClient:
-    settings = get_settings()
-    return SingaporeWeatherClient(
-        base_url=settings.weather_api_base_url,
-        two_hour_path=settings.weather_api_two_hour_path,
-        timeout_seconds=settings.weather_api_timeout_seconds,
-        user_agent=settings.weather_api_user_agent,
-        api_key=settings.weather_api_key,
-    )
+DB_PATH = os.getenv("DATABASE_PATH", "weather.db")
 
 
-def _snapshot_from_location(location: Location) -> WeatherSnapshot:
-    return WeatherSnapshot(
-        temperature_c=location.weather_temperature_c,
-        condition=location.weather_condition,
-        humidity_percent=location.weather_humidity_percent,
-        wind_kph=location.weather_wind_kph,
-        observed_at=location.weather_observed_at,
-        source=location.weather_source,
-        area=location.weather_area,
-        valid_period_text=location.weather_valid_period_text,
-    )
+def get_db():
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    return con
 
 
-def _to_location_read(location: Location) -> LocationRead:
-    return LocationRead(
-        id=location.id,
-        name=location.name,
-        latitude=location.latitude,
-        longitude=location.longitude,
-        created_at=location.created_at,
-        weather=_snapshot_from_location(location),
-    )
+def row_to_dict(row):
+    if row is None:
+        return None
+    d = dict(row)
+    weather = {
+        "condition": d.pop("weather_condition", None),
+        "observed_at": d.pop("weather_observed_at", None),
+        "source": d.pop("weather_source", None),
+        "area": d.pop("weather_area", None),
+        "valid_period_text": d.pop("weather_valid_period_text", None),
+    }
+    d.pop("weather_refreshed_at", None)
+    d["weather"] = weather
+    return d
 
 
-def _apply_weather(location: Location, snapshot: WeatherSnapshot) -> None:
-    location.weather_temperature_c = snapshot.temperature_c
-    location.weather_condition = snapshot.condition
-    location.weather_humidity_percent = snapshot.humidity_percent
-    location.weather_wind_kph = snapshot.wind_kph
-    location.weather_observed_at = snapshot.observed_at
-    location.weather_source = snapshot.source
-    location.weather_area = snapshot.area
-    location.weather_valid_period_text = snapshot.valid_period_text
-    location.weather_refreshed_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
+@router.get("")
+def list_locations():
+    con = get_db()
+    rows = con.execute(
+        "SELECT * FROM locations ORDER BY created_at DESC, id DESC"
+    ).fetchall()
+    con.close()
+    return {"locations": [row_to_dict(row) for row in rows]}
 
 
-@router.get("", response_model=LocationListResponse)
-def list_locations(db: Session = Depends(get_db)):
-    locations = db.scalars(
-        select(Location).order_by(Location.created_at.desc(), Location.id.desc())
-    ).all()
-    return LocationListResponse(locations=[_to_location_read(location) for location in locations])
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_location(payload: dict):
+    latitude = payload.get("latitude")
+    longitude = payload.get("longitude")
 
-
-@router.post("", response_model=LocationRead, status_code=status.HTTP_201_CREATED)
-def create_location(
-    payload: LocationCreate,
-    db: Session = Depends(get_db),
-):
-    location = Location(
-        name=payload.name,
-        latitude=payload.latitude,
-        longitude=payload.longitude,
-        created_at=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S"),
-        weather_condition="Not refreshed",
-        weather_source="not-refreshed",
-    )
-
-    db.add(location)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Location already exists") from None
-
-    db.refresh(location)
-    return _to_location_read(location)
-
-
-@router.get("/{location_id}", response_model=LocationRead)
-def get_location(location_id: int, db: Session = Depends(get_db)):
-    location = db.get(Location, location_id)
-    if location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
-    return _to_location_read(location)
-
-
-@router.post("/{location_id}/refresh", response_model=LocationRead)
-def refresh_location(
-    location_id: int,
-    db: Session = Depends(get_db),
-    weather_client: SingaporeWeatherClient = Depends(get_weather_client),
-):
-    location = db.get(Location, location_id)
-    if location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
-    try:
-        snapshot = weather_client.get_current_weather(
-            latitude=location.latitude,
-            longitude=location.longitude,
+    if latitude is None or longitude is None:
+        raise HTTPException(status_code=422, detail="latitude and longitude are required")
+    if not (1.1 <= latitude <= 1.5 and 103.6 <= longitude <= 104.1):
+        raise HTTPException(
+            status_code=422,
+            detail="Coordinates must be within Singapore (lat 1.1–1.5, lon 103.6–104.1)",
         )
-        _apply_weather(location, snapshot)
-        db.commit()
+
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
+    con = get_db()
+    try:
+        cursor = con.execute(
+            """INSERT INTO locations (latitude, longitude, created_at, weather_condition, weather_source)
+               VALUES (?, ?, ?, 'Not refreshed', 'not-refreshed')""",
+            (latitude, longitude, now),
+        )
+        con.commit()
+        row = con.execute("SELECT * FROM locations WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    except sqlite3.IntegrityError:
+        con.close()
+        raise HTTPException(status_code=409, detail="Location already exists") from None
+    con.close()
+    return row_to_dict(row)
+
+
+@router.get("/{location_id}")
+def get_location(location_id: int):
+    con = get_db()
+    row = con.execute("SELECT * FROM locations WHERE id = ?", (location_id,)).fetchone()
+    con.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return row_to_dict(row)
+
+
+@router.post("/{location_id}/refresh")
+def refresh_location(location_id: int):
+    con = get_db()
+    row = con.execute("SELECT * FROM locations WHERE id = ?", (location_id,)).fetchone()
+    if row is None:
+        con.close()
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    api_key = os.getenv("WEATHER_API_KEY")
+    client = SingaporeWeatherClient(api_key=api_key)
+
+    try:
+        snapshot = client.get_current_weather(
+            latitude=row["latitude"],
+            longitude=row["longitude"],
+        )
     except WeatherProviderError as exc:
-        db.rollback()
+        con.close()
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    db.refresh(location)
-    return _to_location_read(location)
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
+    con.execute(
+        """UPDATE locations
+           SET weather_condition = ?, weather_observed_at = ?, weather_source = ?,
+               weather_area = ?, weather_valid_period_text = ?, weather_refreshed_at = ?
+           WHERE id = ?""",
+        (
+            snapshot["condition"],
+            snapshot["observed_at"],
+            snapshot["source"],
+            snapshot["area"],
+            snapshot["valid_period_text"],
+            now,
+            location_id,
+        ),
+    )
+    con.commit()
+    row = con.execute("SELECT * FROM locations WHERE id = ?", (location_id,)).fetchone()
+    con.close()
+    return row_to_dict(row)

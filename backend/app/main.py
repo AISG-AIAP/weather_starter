@@ -1,35 +1,40 @@
-from contextlib import asynccontextmanager
+import os
+import sqlite3
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
-from app.database import Base, engine, ensure_location_snapshot_columns
 from app.routers.locations import router as locations_router
 
-settings = get_settings()
+DB_PATH = os.getenv("DATABASE_PATH", "weather.db")
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    ensure_location_snapshot_columns()
-    yield
+def init_db():
+    con = sqlite3.connect(DB_PATH)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS locations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            created_at TEXT NOT NULL,
+            weather_condition TEXT,
+            weather_observed_at TEXT,
+            weather_source TEXT,
+            weather_area TEXT,
+            weather_valid_period_text TEXT,
+            weather_refreshed_at TEXT,
+            UNIQUE(latitude, longitude)
+        )
+    """)
+    con.commit()
+    con.close()
 
+
+init_db()
 
 app = FastAPI(
-    title=settings.app_name,
+    title="Weather Starter",
     description="Minimal weather API starter with data.gov.sg integration",
     version="0.1.0",
-    lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["*"],
 )
 
 app.include_router(locations_router, prefix="/api")

@@ -1,5 +1,5 @@
-import { LocationForm } from '../features/locations/components/LocationForm';
-import { LocationList } from '../features/locations/components/LocationList';
+import { LocationForm } from '../components/LocationForm';
+import { LocationList } from '../components/LocationList';
 
 export function Dashboard() {
   return (
