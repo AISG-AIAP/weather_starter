@@ -1,9 +1,12 @@
 import os
 import sqlite3
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from app.routers.locations import router as locations_router
+load_dotenv()
+
+from app.routers.locations import router as locations_router  # noqa: E402
 
 DB_PATH = os.getenv("DATABASE_PATH", "weather.db")
 
