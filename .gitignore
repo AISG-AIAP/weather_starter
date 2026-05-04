@@ -1,26 +1,14 @@
 # macOS
 .DS_Store
 
-# Python / FastAPI
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.pytest_cache/
-.ruff_cache/
-.venv/
-venv/
-
 # Local env files
 .env
 .env.*
 !.env.example
 !.env.local.example
 
-# Local DB artifacts
-backend/*.db
-backend/*.db-shm
-backend/*.db-wal
+# Local data artifacts
+backend/data/
 
 # Node / Vite
 node_modules/
@@ -36,5 +24,6 @@ pnpm-debug.log*
 # Editors
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
