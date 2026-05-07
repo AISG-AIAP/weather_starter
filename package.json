@@ -15,11 +15,14 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "docs": "npm run dev -w docs",
+    "docs:build": "npm run build -w docs"
   },
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "docs"
   ],
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.4",

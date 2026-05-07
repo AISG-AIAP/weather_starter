@@ -1,0 +1,40 @@
+---
+title: Weather Starter
+description: A TypeScript weather app for tracking Singapore locations using data.gov.sg.
+template: splash
+hero:
+  tagline: A TypeScript fullstack starter that tracks Singapore weather using live data.gov.sg APIs.
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+    - text: Architecture
+      link: /guides/architecture/
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What's inside
+
+<CardGrid stagger>
+	<Card title="Express + Drizzle backend" icon="seti:typescript">
+		REST API on Express, SQLite via Drizzle ORM, fetches live weather from
+		data.gov.sg and persists snapshots per location.
+	</Card>
+	<Card title="React + Tailwind frontend" icon="seti:react">
+		Vite-served React UI for adding locations, viewing hourly and 10-day
+		forecasts, and exploring environmental readings on a Leaflet map.
+	</Card>
+	<Card title="Singapore data.gov.sg" icon="information">
+		Pulls real-time temperature, humidity, rainfall, wind, UV, PSI, and
+		PM2.5 — plus 2-hour, 24-hour, and 4-day forecasts.
+	</Card>
+	<Card title="One-command dev loop" icon="rocket">
+		`npm run dev` starts the backend with Vite middleware behind a Portless
+		named URL. No separate frontend server required.
+	</Card>
+</CardGrid>
