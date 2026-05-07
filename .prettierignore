@@ -1,0 +1,13 @@
+node_modules
+dist
+.vite
+package-lock.json
+
+backend/drizzle
+backend/dist
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+backend/data
+
+frontend/dist
