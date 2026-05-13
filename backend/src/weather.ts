@@ -181,52 +181,79 @@ export class SingaporeWeatherClient {
   ) {}
 
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
-    const [
-      forecastPayload,
-      airTemp,
-      relativeHumidity,
-      rainfall,
-      windSpeed,
-      windDirection,
-      uvIndex,
-      airQuality,
-      twentyFourHour,
-      fourDay,
-    ] = await Promise.allSettled([
-      this.fetchLatestForecastPayload(),
-      this.fetchNearestReading('air-temperature', latitude, longitude),
-      this.fetchNearestReading('relative-humidity', latitude, longitude),
-      this.fetchNearestReading('rainfall', latitude, longitude),
-      this.fetchNearestReading('wind-speed', latitude, longitude),
-      this.fetchNearestReading('wind-direction', latitude, longitude),
-      this.fetchUvIndex(),
-      this.fetchAirQuality(latitude, longitude),
-      this.fetchTwentyFourHourForecast(latitude, longitude),
-      this.fetchFourDayForecast(),
-    ]);
+    const settle = async <T>(promise: Promise<T>) => {
+      try {
+        const value = await promise;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return { status: 'fulfilled' as const, value };
+      } catch (reason) {
+        return { status: 'rejected' as const, reason };
+      }
+    };
+
+    const forecastPayload = await settle(this.fetchLatestForecastPayload());
+    const airTemp = await settle(this.fetchNearestReading('air-temperature', latitude, longitude));
+    const relativeHumidity = await settle(this.fetchNearestReading('relative-humidity', latitude, longitude));
+    const rainfall = await settle(this.fetchNearestReading('rainfall', latitude, longitude));
+    const windSpeed = await settle(this.fetchNearestReading('wind-speed', latitude, longitude));
+    const windDirection = await settle(this.fetchNearestReading('wind-direction', latitude, longitude));
+    const uvIndex = await settle(this.fetchUvIndex());
+    const airQuality = await settle(this.fetchAirQuality(latitude, longitude));
+    const twentyFourHour = await settle(this.fetchTwentyFourHourForecast(latitude, longitude));
+    const fourDay = await settle(this.fetchFourDayForecast());
 
     const snapshot =
       forecastPayload.status === 'fulfilled'
         ? this.snapshotFromPayload(forecastPayload.value, latitude, longitude)
         : this.emptyForecastSnapshot();
 
-    if (airTemp.status === 'fulfilled') snapshot.temperature_c = airTemp.value.value;
-    if (relativeHumidity.status === 'fulfilled') snapshot.humidity_percent = relativeHumidity.value.value;
-    if (rainfall.status === 'fulfilled') snapshot.rainfall_mm = rainfall.value.value;
-    if (windSpeed.status === 'fulfilled') snapshot.wind_speed_knots = windSpeed.value.value;
-    if (windDirection.status === 'fulfilled') snapshot.wind_direction_degrees = windDirection.value.value;
-    if (uvIndex.status === 'fulfilled') snapshot.uv_index = uvIndex.value.value;
+    const timestamps: (string | null)[] = [snapshot.observed_at];
+
+    if (airTemp.status === 'fulfilled') {
+      snapshot.temperature_c = airTemp.value.value;
+      timestamps.push(airTemp.value.timestamp);
+    }
+    if (relativeHumidity.status === 'fulfilled') {
+      snapshot.humidity_percent = relativeHumidity.value.value;
+      timestamps.push(relativeHumidity.value.timestamp);
+    }
+    if (rainfall.status === 'fulfilled') {
+      snapshot.rainfall_mm = rainfall.value.value;
+      timestamps.push(rainfall.value.timestamp);
+    }
+    if (windSpeed.status === 'fulfilled') {
+      snapshot.wind_speed_knots = windSpeed.value.value;
+      timestamps.push(windSpeed.value.timestamp);
+    }
+    if (windDirection.status === 'fulfilled') {
+      snapshot.wind_direction_degrees = windDirection.value.value;
+      timestamps.push(windDirection.value.timestamp);
+    }
+    if (uvIndex.status === 'fulfilled') {
+      snapshot.uv_index = uvIndex.value.value;
+      timestamps.push(uvIndex.value.timestamp);
+    }
     if (airQuality.status === 'fulfilled') {
       snapshot.psi_twenty_four_hourly = airQuality.value.psi;
       snapshot.pm25_one_hourly = airQuality.value.pm25;
       snapshot.air_quality_region = airQuality.value.region;
+      timestamps.push(airQuality.value.timestamp);
     }
     if (twentyFourHour.status === 'fulfilled') {
       snapshot.forecast_low_c = twentyFourHour.value.low;
       snapshot.forecast_high_c = twentyFourHour.value.high;
       snapshot.forecast_periods = twentyFourHour.value.periods;
+      timestamps.push(twentyFourHour.value.timestamp);
     }
-    if (fourDay.status === 'fulfilled') snapshot.daily_forecast = fourDay.value.days;
+    if (fourDay.status === 'fulfilled') {
+      snapshot.daily_forecast = fourDay.value.days;
+      timestamps.push(fourDay.value.timestamp);
+    }
+
+    const latest = latestTimestamp(timestamps);
+    if (latest) {
+      snapshot.observed_at = latest;
+    }
 
     return snapshot;
   }
@@ -300,30 +327,33 @@ export class SingaporeWeatherClient {
     region: string | null;
     timestamp: string | null;
   }> {
-    const [psiPayload, pm25Payload] = await Promise.all([
-      this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/psi`),
-      this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/pm25`),
-    ]);
-    for (const payload of [psiPayload, pm25Payload]) {
-      if (payload.code !== undefined && payload.code !== 0) {
-        throw new WeatherProviderError(
-          payload.errorMsg ?? 'Weather provider returned an air quality error',
-        );
+    try {
+      const psiPayload = await this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/psi`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const pm25Payload = await this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/pm25`);
+      for (const payload of [psiPayload, pm25Payload]) {
+        if (payload.code !== undefined && payload.code !== 0) {
+          throw new WeatherProviderError(
+            payload.errorMsg ?? 'Weather provider returned an air quality error',
+          );
+        }
       }
-    }
 
-    const region = nearestRegionName(psiPayload.data?.regionMetadata ?? [], latitude, longitude);
-    const psiItem = psiPayload.data?.items?.[0];
-    const pm25Item = pm25Payload.data?.items?.[0];
-    return {
-      psi: valueForRegion(psiItem?.readings?.psi_twenty_four_hourly, region),
-      pm25: valueForRegion(pm25Item?.readings?.pm25_one_hourly, region),
-      region,
-      timestamp: latestTimestamp([
-        psiItem?.updatedTimestamp ?? psiItem?.timestamp ?? null,
-        pm25Item?.updatedTimestamp ?? pm25Item?.timestamp ?? null,
-      ]),
-    };
+      const region = nearestRegionName(psiPayload.data?.regionMetadata ?? [], latitude, longitude);
+      const psiItem = psiPayload.data?.items?.[0];
+      const pm25Item = pm25Payload.data?.items?.[0];
+      return {
+        psi: valueForRegion(psiItem?.readings?.psi_twenty_four_hourly, region),
+        pm25: valueForRegion(pm25Item?.readings?.pm25_one_hourly, region),
+        region,
+        timestamp: latestTimestamp([
+          psiItem?.updatedTimestamp ?? psiItem?.timestamp ?? null,
+          pm25Item?.updatedTimestamp ?? pm25Item?.timestamp ?? null,
+        ]),
+      };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async fetchTwentyFourHourForecast(
