@@ -25,14 +25,7 @@ export async function createApp(options: AppOptions = {}) {
     app.use(pinoHttp({ logger }));
   }
 
-  app.use((request, response, next) => {
-    if (request.path.startsWith('/frontman')) {
-      next();
-      return;
-    }
-
-    express.json()(request, response, next);
-  });
+  app.use(express.json());
 
   app.get('/health', (_request, response) => {
     response.json({ status: 'healthy' });
