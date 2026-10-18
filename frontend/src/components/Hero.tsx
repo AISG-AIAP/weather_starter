@@ -27,7 +27,10 @@ export function Hero() {
 
   const isHome = locations[0]?.id === selected.id;
   const area =
-    selected.weather?.area || `${selected.latitude.toFixed(3)}, ${selected.longitude.toFixed(3)}`;
+    selected.weather?.area ||
+    (selected.latitude != null && selected.longitude != null
+      ? `${selected.latitude.toFixed(3)}, ${selected.longitude.toFixed(3)}`
+      : 'Unknown location');
   const condition = selected.weather?.condition || 'Conditions unavailable';
   const observed = formatTime(selected.weather?.observed_at);
   const validPeriod = selected.weather?.valid_period_text;

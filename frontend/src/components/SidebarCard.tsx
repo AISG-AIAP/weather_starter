@@ -14,9 +14,12 @@ export function SidebarCard({ location, isHome }: SidebarCardProps) {
   const { selectedId, select, remove } = useStore();
   const [isDeleting, setIsDeleting] = useState(false);
   const isSelected = selectedId === location.id;
-  const observed = formatTime(location.weather.observed_at);
+  const observed = formatTime(location.weather?.observed_at ?? null);
   const area =
-    location.weather.area || `${location.latitude.toFixed(3)}, ${location.longitude.toFixed(3)}`;
+    location.weather?.area ||
+    (location.latitude != null && location.longitude != null
+      ? `${location.latitude.toFixed(3)}, ${location.longitude.toFixed(3)}`
+      : 'Unknown location');
   const condition = location.weather.condition || '-';
   const temperature = formatTemperature(location.weather.temperature_c);
   const high = formatTemperature(location.weather.forecast_high_c);
