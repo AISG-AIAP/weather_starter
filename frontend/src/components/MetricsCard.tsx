@@ -35,7 +35,7 @@ export function MetricsCard({ weather }: MetricsCardProps) {
     },
     {
       label: 'Rainfall',
-      value: weather.rainfall_mm !== null ? weather.rainfall_mm.toFixed(1) : '--',
+      value: weather.rainfall_mm != null ? weather.rainfall_mm.toFixed(1) : '--',
       unit: 'mm',
       icon: <CloudRainIcon className="h-5 w-5 text-cyan-400" />,
     },
@@ -46,12 +46,12 @@ export function MetricsCard({ weather }: MetricsCardProps) {
     },
     {
       label: 'UV Index',
-      value: weather.uv_index !== null ? String(Math.round(weather.uv_index)) : '--',
+      value: weather.uv_index != null ? String(Math.round(weather.uv_index)) : '--',
       icon: <SunIcon className="h-5 w-5 text-yellow-400" />,
     },
     {
       label: 'Pressure',
-      value: weather.psi_twenty_four_hourly !== null ? String(Math.round(weather.psi_twenty_four_hourly)) : '--',
+      value: weather.psi_twenty_four_hourly != null ? String(Math.round(weather.psi_twenty_four_hourly)) : '--',
       unit: 'PSI',
       icon: <GaugeIcon className="h-5 w-5 text-orange-400" />,
     },

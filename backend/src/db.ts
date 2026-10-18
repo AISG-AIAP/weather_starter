@@ -55,9 +55,11 @@ await migrate(
 );
 
 export async function listLocations(): Promise<LocationRecord[]> {
-  return (
-    await db.select().from(locations).orderBy(desc(locations.createdAt), desc(locations.id)).all()
-  ).map(rowToRecord);
+  const stmt = sqlite.prepare(
+    'SELECT id, latitude, longitude, created_at, condition, observed_at, source, area, valid_period_text, temperature_c, humidity_percent, rainfall_mm, wind_speed_knots, wind_direction_degrees, forecast_low_c, forecast_high_c, uv_index, psi_twenty_four_hourly, pm25_one_hourly, air_quality_region, forecast_periods, daily_forecast FROM locations ORDER BY created_at DESC, id DESC'
+  );
+  const rows = stmt.all() as unknown as LocationRow[];
+  return rows.map(rowToRecord);
 }
 
 export async function createLocation(latitude: number, longitude: number): Promise<LocationRecord> {
@@ -86,11 +88,14 @@ export async function createLocation(latitude: number, longitude: number): Promi
     .returning()
     .get();
 
-  return rowToRecord(row);
+  return rowToRecord(row as LocationRow);
 }
 
 export async function getLocation(id: number): Promise<LocationRecord | null> {
-  const row = await db.select().from(locations).where(eq(locations.id, id)).get();
+  const stmt = sqlite.prepare(
+    'SELECT id, latitude, longitude, created_at, condition, observed_at, source, area, valid_period_text, temperature_c, humidity_percent, rainfall_mm, wind_speed_knots, wind_direction_degrees, forecast_low_c, forecast_high_c, uv_index, psi_twenty_four_hourly, pm25_one_hourly, air_quality_region, forecast_periods, daily_forecast FROM locations WHERE id = ?'
+  );
+  const row = stmt.get(id) as unknown as LocationRow | undefined;
   return row ? rowToRecord(row) : null;
 }
 
