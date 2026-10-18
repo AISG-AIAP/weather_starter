@@ -82,7 +82,7 @@ export async function createLocation(latitude: number, longitude: number): Promi
       longitude,
       createdAt,
       ...weather,
-    })
+    } as any)
     .returning()
     .get();
 
@@ -99,7 +99,7 @@ export async function updateWeather(
   weather: WeatherSnapshot,
 ): Promise<LocationRecord | null> {
   const columns = weatherToColumns(weather);
-  const row = await db.update(locations).set(columns).where(eq(locations.id, id)).returning().get();
+  const row = await db.update(locations).set(columns as any).where(eq(locations.id, id)).returning().get();
 
   return row ? rowToRecord(row) : null;
 }
@@ -169,24 +169,24 @@ function rowToRecord(row: LocationRow): LocationRecord {
   };
 }
 
-function sqliteCallback(
+async function sqliteCallback(
   sql: string,
   params: unknown[],
   method: 'run' | 'all' | 'values' | 'get',
-): { rows: unknown[] } {
+): Promise<{ rows: unknown[] }> {
   const statement = sqlite.prepare(sql);
   const bindings = params as never[];
   if (method === 'run') {
     statement.run(...bindings);
-    return { rows: [] };
+    return Promise.resolve({ rows: [] });
   }
   if (method === 'get') {
     const row = statement.get(...bindings) as Record<string, unknown> | undefined;
-    return { rows: row ? [row] : [] };
+    return Promise.resolve({ rows: row ? [row] : [] });
   }
   const rows = statement.all(...bindings) as Record<string, unknown>[];
   if (method === 'values') {
-    return { rows: rows.map((row) => Object.values(row)) };
+    return Promise.resolve({ rows: rows.map((row) => Object.values(row)) });
   }
-  return { rows };
+  return Promise.resolve({ rows });
 }

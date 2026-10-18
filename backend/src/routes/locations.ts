@@ -54,8 +54,16 @@ export function createLocationsRouter(options: LocationsRouterOptions = {}): Rou
           location.latitude,
           location.longitude,
         );
-        const updated = await updateWeather(location.id, snapshot);
-        response.status(201).json(updated ?? location);
+        try {
+          const updated = await updateWeather(location.id, snapshot);
+          response.status(201).json(updated ?? location);
+        } catch (dbError) {
+          logger.warn(
+            { err: dbError, locationId: location.id },
+            'weather update failed after location create',
+          );
+          response.status(201).json(location);
+        }
       } catch (error) {
         if (!(error instanceof WeatherProviderError)) throw error;
         logger.warn(
