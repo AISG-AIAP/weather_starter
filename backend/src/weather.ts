@@ -187,6 +187,72 @@ export class SingaporeWeatherClient {
       : this.emptyForecastSnapshot();
   }
 
+  async getEnrichedWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
+    const [forecast, temperature, humidity, rainfall, wind, uv, airQuality, twentyFourHour, fourDay] =
+      await Promise.allSettled([
+        this.fetchLatestForecastPayload(),
+        this.fetchNearestReading('air-temperature', latitude, longitude),
+        this.fetchNearestReading('relative-humidity', latitude, longitude),
+        this.fetchNearestReading('rainfall', latitude, longitude),
+        Promise.all([
+          this.fetchNearestReading('wind-speed', latitude, longitude),
+          this.fetchNearestReading('wind-direction', latitude, longitude),
+        ]),
+        this.fetchUvIndex(),
+        this.fetchAirQuality(latitude, longitude),
+        this.fetchTwentyFourHourForecast(latitude, longitude),
+        this.fetchFourDayForecast(),
+      ]);
+
+    let snapshot =
+      forecast.status === 'fulfilled' && forecast.value
+        ? this.snapshotFromPayload(forecast.value, latitude, longitude)
+        : this.emptyForecastSnapshot();
+
+    if (temperature.status === 'fulfilled' && temperature.value.value !== null) {
+      snapshot.temperature_c = temperature.value.value;
+      snapshot.observed_at = temperature.value.timestamp ?? snapshot.observed_at;
+    }
+
+    if (humidity.status === 'fulfilled' && humidity.value.value !== null) {
+      snapshot.humidity_percent = humidity.value.value;
+    }
+
+    if (rainfall.status === 'fulfilled' && rainfall.value.value !== null) {
+      snapshot.rainfall_mm = rainfall.value.value;
+    }
+
+    if (wind.status === 'fulfilled') {
+      const [windSpeed, windDir] = wind.value;
+      if (windSpeed.value !== null) snapshot.wind_speed_knots = windSpeed.value;
+      if (windDir.value !== null) snapshot.wind_direction_degrees = windDir.value;
+    }
+
+    if (uv.status === 'fulfilled' && uv.value.value !== null) {
+      snapshot.uv_index = uv.value.value;
+    }
+
+    if (airQuality.status === 'fulfilled') {
+      const aq = airQuality.value;
+      if (aq.psi !== null) snapshot.psi_twenty_four_hourly = aq.psi;
+      if (aq.pm25 !== null) snapshot.pm25_one_hourly = aq.pm25;
+      if (aq.region) snapshot.air_quality_region = aq.region;
+    }
+
+    if (twentyFourHour.status === 'fulfilled') {
+      const tf = twentyFourHour.value;
+      if (tf.low !== null) snapshot.forecast_low_c = tf.low;
+      if (tf.high !== null) snapshot.forecast_high_c = tf.high;
+      snapshot.forecast_periods = tf.periods;
+    }
+
+    if (fourDay.status === 'fulfilled') {
+      snapshot.daily_forecast = fourDay.value.days;
+    }
+
+    return snapshot;
+  }
+
   async fetchLatestForecastPayload(): Promise<ForecastPayload> {
     return this.fetchJson(`${this.apiBaseUrl()}/v2/real-time/api/two-hr-forecast`);
   }

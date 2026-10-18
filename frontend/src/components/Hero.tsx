@@ -3,6 +3,7 @@ import { LocationIcon, RefreshIcon } from './icons';
 import { HourlyStrip } from './HourlyStrip';
 import { TenDayForecast } from './TenDayForecast';
 import { TileGrid } from './Tiles';
+import { DetailPanel } from './DetailPanel';
 import { formatTemperature, formatTime } from './format';
 
 export function Hero() {
@@ -61,6 +62,7 @@ export function Hero() {
           <p className="px-2 pb-1 text-center text-xs text-white/65">{validPeriod}</p>
         )}
 
+        <DetailPanel locationId={selected.id} currentWeather={selected.weather} />
         <HourlyStrip periods={selected.weather?.forecast_periods} />
         <TenDayForecast weather={selected.weather} />
         <TileGrid weather={selected.weather} />

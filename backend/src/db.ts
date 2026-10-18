@@ -67,7 +67,7 @@ export async function createLocation(latitude: number, longitude: number): Promi
     .where(and(eq(locations.latitude, latitude), eq(locations.longitude, longitude)))
     .get();
 
-  if (duplicate) {
+  if (duplicate?.id !== undefined) {
     const error = new Error('Location already exists');
     error.name = 'DuplicateLocationError';
     throw error;
@@ -104,6 +104,10 @@ export async function updateWeather(
   return row ? rowToRecord(row) : null;
 }
 
+export async function deleteLocation(id: number): Promise<void> {
+  await db.delete(locations).where(eq(locations.id, id)).run();
+}
+
 export function closeDatabase(): void {
   sqlite.close();
 }
@@ -131,8 +135,8 @@ function weatherToColumns(weather: WeatherSnapshot) {
     psiTwentyFourHourly: weather.psi_twenty_four_hourly,
     pm25OneHourly: weather.pm25_one_hourly,
     airQualityRegion: weather.air_quality_region,
-    forecastPeriods: weather.forecast_periods,
-    dailyForecast: weather.daily_forecast,
+    forecastPeriods: JSON.stringify(weather.forecast_periods),
+    dailyForecast: JSON.stringify(weather.daily_forecast),
   };
 }
 
@@ -159,17 +163,17 @@ function rowToRecord(row: LocationRow): LocationRecord {
       psi_twenty_four_hourly: row.psiTwentyFourHourly,
       pm25_one_hourly: row.pm25OneHourly,
       air_quality_region: row.airQualityRegion,
-      forecast_periods: row.forecastPeriods,
-      daily_forecast: row.dailyForecast,
+      forecast_periods: typeof row.forecastPeriods === 'string' ? JSON.parse(row.forecastPeriods) : row.forecastPeriods,
+      daily_forecast: typeof row.dailyForecast === 'string' ? JSON.parse(row.dailyForecast) : row.dailyForecast,
     },
   };
 }
 
-async function sqliteCallback(
+function sqliteCallback(
   sql: string,
   params: unknown[],
   method: 'run' | 'all' | 'values' | 'get',
-): Promise<{ rows: unknown[] }> {
+): { rows: unknown[] } {
   const statement = sqlite.prepare(sql);
   const bindings = params as never[];
   if (method === 'run') {
@@ -178,11 +182,11 @@ async function sqliteCallback(
   }
   if (method === 'get') {
     const row = statement.get(...bindings) as Record<string, unknown> | undefined;
-    return { rows: row ? Object.values(row) : (undefined as unknown as unknown[]) };
+    return { rows: row ? [row] : [] };
   }
   const rows = statement.all(...bindings) as Record<string, unknown>[];
   if (method === 'values') {
     return { rows: rows.map((row) => Object.values(row)) };
   }
-  return { rows: rows.map((row) => Object.values(row)) };
+  return { rows };
 }

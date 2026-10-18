@@ -57,6 +57,7 @@ export interface StoreValue {
   setAdding: (isAdding: boolean) => void;
   create: (payload: CreateLocationPayload) => Promise<void>;
   refresh: (id: number) => Promise<void>;
+  remove: (id: number) => Promise<void>;
 }
 
 export interface ProviderProps {

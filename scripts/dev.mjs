@@ -13,6 +13,7 @@ const child = spawn(
         "run",
         "--name",
         "weather-starter",
+        "--force",
         "tsx",
         "watch",
         "backend/src/server.ts",

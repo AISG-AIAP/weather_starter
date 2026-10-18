@@ -2,6 +2,7 @@ import type { Router } from 'express';
 import { Router as createRouter } from 'express';
 import {
   createLocation,
+  deleteLocation,
   getLocation,
   listLocations,
   updateWeather,
@@ -103,6 +104,47 @@ export function createLocationsRouter(options: LocationsRouterOptions = {}): Rou
         response.status(502).json({ detail: error.message });
         return;
       }
+      next(error);
+    }
+  });
+
+  router.get('/locations/:locationId/weather-rich', async (request, response, next) => {
+    try {
+      const locationId = Number(request.params.locationId);
+      const location = await getLocation(locationId);
+      if (!location) {
+        response.status(404).json({ detail: 'Location not found' });
+        return;
+      }
+
+      if (!(weatherClient instanceof SingaporeWeatherClient)) {
+        response.status(501).json({ detail: 'Rich weather endpoint requires SingaporeWeatherClient' });
+        return;
+      }
+
+      const weather = await weatherClient.getEnrichedWeather(location.latitude, location.longitude);
+      response.json(weather);
+    } catch (error) {
+      if (error instanceof WeatherProviderError) {
+        response.status(502).json({ detail: error.message });
+        return;
+      }
+      next(error);
+    }
+  });
+
+  router.delete('/locations/:locationId', async (request, response, next) => {
+    try {
+      const locationId = Number(request.params.locationId);
+      const location = await getLocation(locationId);
+      if (!location) {
+        response.status(404).json({ detail: 'Location not found' });
+        return;
+      }
+
+      await deleteLocation(locationId);
+      response.status(204).send();
+    } catch (error) {
       next(error);
     }
   });

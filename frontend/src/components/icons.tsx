@@ -148,3 +148,64 @@ export function CloseIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
     </svg>
   );
 }
+
+export function CloudRainIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+      <path d="M9 22v-5m3 5v-5m3 5v-5" />
+    </svg>
+  );
+}
+
+export function CloudWindIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+      <path d="M4 10h10m-5 4h8" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0l-1.5 14a2 2 0 0 1-2 1.5H7.5a2 2 0 0 1-2-1.5L4 6M10 11v4M14 11v4" />
+    </svg>
+  );
+}
+
+export function CloudCheckIcon({ className = 'h-6 w-6' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M8 13l3 3 5-5M7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+    </svg>
+  );
+}
+
+export function CloudLightningIcon({ className = 'h-6 w-6' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M13 10V3L8 12h4v7l5-9h-4ZM7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+    </svg>
+  );
+}
+
+export function CloudRainCheckIcon({ className = 'h-6 w-6' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+      <path d="M9 22v-5m3 5v-5" />
+    </svg>
+  );
+}
+
+export function CloudSnowIcon({ className = 'h-6 w-6' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M9 11l2-2m0 4l-2-2m2 2l2 2m-2-2l-2-2" />
+      <path d="M15 11l2-2m0 4l-2-2m2 2l2 2m-2-2l-2-2" />
+      <path d="M7 18h10a4 4 0 0 0 .8-7.92A6 6 0 0 0 6.1 11.4 3.5 3.5 0 0 0 7 18Z" />
+    </svg>
+  );
+}
