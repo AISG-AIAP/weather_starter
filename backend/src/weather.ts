@@ -1,4 +1,8 @@
+import { TtlCache } from './weatherCache.js';
+
 export class WeatherProviderError extends Error {}
+
+const DEFAULT_ENRICHED_CACHE_TTL_MS = 5 * 60 * 1000;
 
 interface ForecastPayload {
   code?: number;
@@ -171,14 +175,21 @@ export interface WeatherSnapshot {
 }
 
 export class SingaporeWeatherClient {
+  private readonly enrichedWeatherCache: TtlCache<WeatherSnapshot>;
+
   constructor(
     private readonly options: {
       baseUrl?: string;
       apiKey?: string;
       timeoutMs?: number;
       userAgent?: string;
+      enrichedCacheTtlMs?: number;
     } = {},
-  ) {}
+  ) {
+    this.enrichedWeatherCache = new TtlCache(
+      options.enrichedCacheTtlMs ?? DEFAULT_ENRICHED_CACHE_TTL_MS,
+    );
+  }
 
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
     const forecastPayload = await this.fetchLatestForecastPayload().catch(() => null);
@@ -188,6 +199,15 @@ export class SingaporeWeatherClient {
   }
 
   async getEnrichedWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
+    return this.enrichedWeatherCache.get(`${latitude},${longitude}`, () =>
+      this.fetchEnrichedWeather(latitude, longitude),
+    );
+  }
+
+  private async fetchEnrichedWeather(
+    latitude: number,
+    longitude: number,
+  ): Promise<WeatherSnapshot> {
     const [forecast, temperature, humidity, rainfall, wind, uv, airQuality, twentyFourHour, fourDay] =
       await Promise.allSettled([
         this.fetchLatestForecastPayload(),
