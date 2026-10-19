@@ -1,18 +1,54 @@
+import { useState } from 'react';
 import { useStore, useSelectedLocation } from '../state/store';
 import { LocationIcon, RefreshIcon } from './icons';
 import { HourlyStrip } from './HourlyStrip';
 import { TenDayForecast } from './TenDayForecast';
 import { TileGrid } from './Tiles';
 import { DetailPanel } from './DetailPanel';
+import { MapView } from './map/MapView';
 import { formatTemperature, formatTime } from './format';
 
+type HeroView = 'map' | 'details';
+
+function ViewToggle({ view, onChange }: { view: HeroView; onChange: (view: HeroView) => void }) {
+  return (
+    <div className="flex items-center gap-1 self-center rounded-full border border-white/15 bg-white/[0.08] p-1 text-xs font-medium text-white/85 backdrop-blur-xl">
+      {(['map', 'details'] as const).map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => onChange(option)}
+          className={`rounded-full px-3 py-1 capitalize transition ${
+            view === option ? 'bg-white/20 text-white' : 'hover:bg-white/10'
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Hero() {
-  const { locations, refresh, refreshingId } = useStore();
+  const { locations, refresh, refreshingId, select } = useStore();
   const selected = useSelectedLocation();
+  const [view, setView] = useState<HeroView>('map');
+
+  if (view === 'map') {
+    return (
+      <main className="flex flex-1 flex-col overflow-hidden p-6">
+        <ViewToggle view={view} onChange={setView} />
+        <div className="mt-4 flex-1 overflow-hidden">
+          <MapView locations={locations} onSelect={select} />
+        </div>
+      </main>
+    );
+  }
 
   if (!selected) {
     return (
       <main className="flex flex-1 flex-col p-10">
+        <ViewToggle view={view} onChange={setView} />
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <p className="text-2xl font-light text-white/85">Select a location</p>
@@ -42,6 +78,7 @@ export function Hero() {
 
   return (
     <main className="flex-1 overflow-y-auto">
+      <ViewToggle view={view} onChange={setView} />
       <div className="mx-auto flex max-w-5xl flex-col gap-3 p-6 lg:p-8">
         <header className="flex flex-col items-center pt-6 pb-2 text-center">
           {isHome && (
