@@ -2,10 +2,11 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { Location } from '../../types';
 import { classifyCondition, type ConditionCategory } from '../conditionCategory';
 import { conditionIcon } from './conditionMarkerIcon';
+import { MapPinPopup } from './MapPinPopup';
 
 export interface MapViewProps {
   locations: Location[];
@@ -63,7 +64,11 @@ export function MapView({ locations, onSelect }: MapViewProps) {
           position={[location.latitude, location.longitude]}
           icon={buildMarkerIcon(classifyCondition(location.weather.condition))}
           eventHandlers={{ click: () => onSelect(location.id) }}
-        />
+        >
+          <Popup>
+            <MapPinPopup location={location} />
+          </Popup>
+        </Marker>
       ))}
       <FitBoundsToLocations locations={locations} />
     </MapContainer>
