@@ -4,6 +4,7 @@ import { getEnrichedWeather } from '../api';
 import { formatHumidity, formatRainfall, formatWind, getAirQualityLabel, formatTemperature } from './format';
 import { CloudRainIcon, CloudWindIcon, SunIcon } from './icons';
 import { ConditionCard } from './ConditionCard';
+import { HourlyTimeline } from './HourlyTimeline';
 import { MetricsCard } from './MetricsCard';
 import { AirQualityCard } from './AirQualityCard';
 import { ForecastHourlyCard } from './ForecastHourlyCard';
@@ -43,6 +44,9 @@ export function DetailPanel({ locationId, currentWeather }: DetailPanelProps) {
     <div className="space-y-4">
       {/* Condition Card */}
       <ConditionCard weather={weather} />
+
+      {/* Hourly Timeline (hardcoded placeholder data) */}
+      <HourlyTimeline />
 
       {/* Metrics Card */}
       <MetricsCard weather={weather} />
