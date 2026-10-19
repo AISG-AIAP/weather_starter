@@ -1,4 +1,5 @@
 import type { WeatherSnapshot } from '../types';
+import { classifyCondition } from './conditionCategory';
 import { CloudCheckIcon, CloudLightningIcon, CloudRainCheckIcon, CloudSnowIcon } from './icons';
 
 interface ConditionCardProps {
@@ -15,30 +16,36 @@ export function ConditionCard({ weather }: ConditionCardProps) {
   }
 
   const condition = weather.condition || 'Unknown';
+  const category = classifyCondition(condition);
+
   const getConditionIcon = () => {
-    const lower = condition.toLowerCase();
-    if (lower.includes('thundery') || lower.includes('thunderstorm')) {
-      return <CloudLightningIcon className="h-8 w-8 text-yellow-300" />;
+    switch (category) {
+      case 'thunderstorm':
+        return <CloudLightningIcon className="h-8 w-8 text-yellow-300" />;
+      case 'rain':
+        return <CloudRainCheckIcon className="h-8 w-8 text-blue-300" />;
+      case 'snow':
+        return <CloudSnowIcon className="h-8 w-8 text-cyan-200" />;
+      case 'clear':
+        return <CloudCheckIcon className="h-8 w-8 text-yellow-400" />;
+      default:
+        return <CloudCheckIcon className="h-8 w-8 text-white/70" />;
     }
-    if (lower.includes('rain') || lower.includes('showers')) {
-      return <CloudRainCheckIcon className="h-8 w-8 text-blue-300" />;
-    }
-    if (lower.includes('snow') || lower.includes('sleet')) {
-      return <CloudSnowIcon className="h-8 w-8 text-cyan-200" />;
-    }
-    if (lower.includes('clear') || lower.includes('sunny')) {
-      return <CloudCheckIcon className="h-8 w-8 text-yellow-400" />;
-    }
-    return <CloudCheckIcon className="h-8 w-8 text-white/70" />;
   };
 
   const getConditionColor = () => {
-    const lower = condition.toLowerCase();
-    if (lower.includes('thundery') || lower.includes('thunderstorm')) return 'from-yellow-500/20 to-yellow-600/10';
-    if (lower.includes('rain') || lower.includes('showers')) return 'from-blue-500/20 to-blue-600/10';
-    if (lower.includes('snow')) return 'from-cyan-500/20 to-cyan-600/10';
-    if (lower.includes('clear') || lower.includes('sunny')) return 'from-yellow-500/20 to-orange-600/10';
-    return 'from-white/10 to-white/5';
+    switch (category) {
+      case 'thunderstorm':
+        return 'from-yellow-500/20 to-yellow-600/10';
+      case 'rain':
+        return 'from-blue-500/20 to-blue-600/10';
+      case 'snow':
+        return 'from-cyan-500/20 to-cyan-600/10';
+      case 'clear':
+        return 'from-yellow-500/20 to-orange-600/10';
+      default:
+        return 'from-white/10 to-white/5';
+    }
   };
 
   return (

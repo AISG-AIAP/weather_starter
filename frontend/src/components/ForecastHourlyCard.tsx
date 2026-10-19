@@ -1,4 +1,5 @@
 import type { ForecastPeriod } from '../types';
+import { classifyCondition } from './conditionCategory';
 import { CloudIcon, CloudLightningIcon, CloudRainIcon } from './icons';
 
 interface ForecastHourlyCardProps {
@@ -15,25 +16,25 @@ export function ForecastHourlyCard({ periods }: ForecastHourlyCardProps) {
   }
 
   const getConditionIcon = (forecast: string) => {
-    const lower = forecast.toLowerCase();
-    if (lower.includes('thundery') || lower.includes('thunderstorm')) {
-      return <CloudLightningIcon className="h-6 w-6 text-yellow-300" />;
+    switch (classifyCondition(forecast)) {
+      case 'thunderstorm':
+        return <CloudLightningIcon className="h-6 w-6 text-yellow-300" />;
+      case 'rain':
+        return <CloudRainIcon className="h-6 w-6 text-blue-300" />;
+      default:
+        return <CloudIcon className="h-6 w-6 text-white/70" />;
     }
-    if (lower.includes('rain') || lower.includes('showers')) {
-      return <CloudRainIcon className="h-6 w-6 text-blue-300" />;
-    }
-    return <CloudIcon className="h-6 w-6 text-white/70" />;
   };
 
   const getConditionBgColor = (forecast: string) => {
-    const lower = forecast.toLowerCase();
-    if (lower.includes('thundery') || lower.includes('thunderstorm')) {
-      return 'bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/15';
+    switch (classifyCondition(forecast)) {
+      case 'thunderstorm':
+        return 'bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/15';
+      case 'rain':
+        return 'bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/15';
+      default:
+        return 'bg-white/5 border-white/15 hover:bg-white/[0.08]';
     }
-    if (lower.includes('rain') || lower.includes('showers')) {
-      return 'bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/15';
-    }
-    return 'bg-white/5 border-white/15 hover:bg-white/[0.08]';
   };
 
   return (
