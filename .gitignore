@@ -37,3 +37,6 @@ pnpm-debug.log*
 .mise.local.toml
 *.swp
 *.swo
+
+# Brainstorming session scratch files
+.superpowers/
