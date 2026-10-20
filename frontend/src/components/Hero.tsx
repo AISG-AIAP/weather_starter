@@ -12,19 +12,21 @@ type HeroView = 'map' | 'details';
 
 function ViewToggle({ view, onChange }: { view: HeroView; onChange: (view: HeroView) => void }) {
   return (
-    <div className="flex items-center gap-1 self-center rounded-full border border-white/15 bg-white/[0.08] p-1 text-xs font-medium text-white/85 backdrop-blur-xl">
-      {(['map', 'details'] as const).map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onChange(option)}
-          className={`rounded-full px-3 py-1 capitalize transition ${
-            view === option ? 'bg-white/20 text-white' : 'hover:bg-white/10'
-          }`}
-        >
-          {option}
-        </button>
-      ))}
+    <div className="flex justify-center">
+      <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.08] p-1 text-xs font-medium text-white/85 backdrop-blur-xl">
+        {(['map', 'details'] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            className={`rounded-full px-3 py-1 capitalize transition ${
+              view === option ? 'bg-white/20 text-white' : 'hover:bg-white/10'
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -77,7 +79,7 @@ export function Hero() {
   const low = formatTemperature(selected.weather?.forecast_low_c);
 
   return (
-    <main className="flex-1 overflow-y-auto">
+    <main className="flex-1 overflow-y-auto pt-6">
       <ViewToggle view={view} onChange={setView} />
       <div className="mx-auto flex max-w-5xl flex-col gap-3 p-6 lg:p-8">
         <header className="flex flex-col items-center pt-6 pb-2 text-center">

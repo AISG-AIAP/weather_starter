@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { Location } from '../../types';
@@ -52,6 +52,13 @@ function FitBoundsToLocations({ locations }: { locations: Location[] }) {
 }
 
 export function MapView({ locations, onSelect }: MapViewProps) {
+  // react-leaflet keeps a popup's content mounted after it closes (Leaflet only detaches
+  // the DOM node, it doesn't unmount), so a plain useEffect-on-id in MapPinPopup only fetches
+  // once per pin for the component's lifetime. Bumping a per-location key on every popupopen
+  // forces a fresh MapPinPopup mount — and therefore a fresh fetch — on every reopen, which
+  // matters most for a pin whose first fetch failed.
+  const [popupGeneration, setPopupGeneration] = useState<Record<number, number>>({});
+
   return (
     <MapContainer center={SINGAPORE_CENTER} zoom={DEFAULT_ZOOM} className="h-full w-full rounded-2xl">
       <TileLayer
@@ -63,10 +70,14 @@ export function MapView({ locations, onSelect }: MapViewProps) {
           key={location.id}
           position={[location.latitude, location.longitude]}
           icon={buildMarkerIcon(classifyCondition(location.weather.condition))}
-          eventHandlers={{ click: () => onSelect(location.id) }}
+          eventHandlers={{
+            click: () => onSelect(location.id),
+            popupopen: () =>
+              setPopupGeneration((prev) => ({ ...prev, [location.id]: (prev[location.id] ?? 0) + 1 })),
+          }}
         >
           <Popup>
-            <MapPinPopup location={location} />
+            <MapPinPopup key={popupGeneration[location.id] ?? 0} location={location} />
           </Popup>
         </Marker>
       ))}
