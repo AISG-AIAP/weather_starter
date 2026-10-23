@@ -41,3 +41,31 @@ input:focus-visible {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #1b2430;
+  color: #fff;
+  border-radius: 1rem;
+}
+
+.leaflet-popup-tip {
+  background: #1b2430;
+}
+
+.weather-marker {
+  background: none;
+  border: none;
+}

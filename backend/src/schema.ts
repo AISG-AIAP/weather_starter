@@ -52,10 +52,10 @@ export const locations = sqliteTable(
     psiTwentyFourHourly: real('psi_twenty_four_hourly'),
     pm25OneHourly: real('pm25_one_hourly'),
     airQualityRegion: text('air_quality_region'),
-    forecastPeriods: text('forecast_periods', { mode: 'json' })
+    forecastPeriods: text('forecast_periods')
       .$type<WeatherSnapshot['forecast_periods']>()
       .notNull(),
-    dailyForecast: text('daily_forecast', { mode: 'json' })
+    dailyForecast: text('daily_forecast')
       .$type<WeatherSnapshot['daily_forecast']>()
       .notNull(),
   },

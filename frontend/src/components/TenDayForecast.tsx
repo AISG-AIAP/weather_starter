@@ -47,7 +47,7 @@ function barOffsets(day: DailyForecast, range: WeekRange | null) {
 }
 
 export function TenDayForecast({ weather }: TenDayForecastProps) {
-  const days = weather.daily_forecast;
+  const days = weather?.daily_forecast ?? [];
   const range = computeWeekRange(days);
 
   return (
