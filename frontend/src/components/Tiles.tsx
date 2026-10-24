@@ -74,6 +74,27 @@ function airQualityLabel(psi: number | null | undefined): string {
   return 'Hazardous';
 }
 
+export function ConditionTile({ weather }: WeatherProps) {
+  const condition = weather.condition || 'Unavailable';
+  const area = weather.area || 'Nearest forecast area unavailable';
+
+  return (
+    <TileShell
+      icon={<CloudIcon className="h-3.5 w-3.5" />}
+      title="Condition"
+      className="col-span-2"
+    >
+      <div className="text-3xl font-light leading-tight text-white/95">{condition}</div>
+      <div className="mt-1 text-sm font-medium text-white/85">{area}</div>
+      <p className="mt-3 text-xs leading-snug text-white/70">
+        {weather.valid_period_text
+          ? `Valid ${weather.valid_period_text}`
+          : 'Valid period unavailable'}
+      </p>
+    </TileShell>
+  );
+}
+
 export function AirQualityTile({ weather }: WeatherProps) {
   const psi = formatNumber(weather?.psi_twenty_four_hourly);
   const pm25 = formatNumber(weather?.pm25_one_hourly);
@@ -247,6 +268,7 @@ export function AveragesTile({ weather }: WeatherProps) {
 export function TileGrid({ weather }: WeatherProps) {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <ConditionTile weather={weather} />
       <AirQualityTile weather={weather} />
       <WindTile weather={weather} />
       <UVTile weather={weather} />

@@ -10,12 +10,1397 @@ body,
 
 body {
   @apply text-white antialiased;
+}
+
+html:not([data-theme]) body,
+html[data-theme='apple'] body {
   background:
     radial-gradient(120% 80% at 70% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
     radial-gradient(90% 70% at 10% 100%, rgba(80, 110, 150, 0.55) 0%, transparent 60%),
     linear-gradient(170deg, #6f8aa8 0%, #5a7591 35%, #4a627c 65%, #3c5066 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+html[data-theme='atmospheric-glass'] body {
+  background:
+    radial-gradient(70% 55% at 78% 8%, rgba(255, 238, 190, 0.42) 0%, transparent 68%),
+    radial-gradient(75% 65% at 8% 90%, rgba(76, 175, 220, 0.5) 0%, transparent 70%),
+    radial-gradient(55% 48% at 42% 28%, rgba(226, 246, 255, 0.28) 0%, transparent 68%),
+    linear-gradient(145deg, #7ba9c8 0%, #568bb2 38%, #356b92 68%, #244f73 100%);
+  background-attachment: fixed;
+  background-size:
+    125% 125%,
+    135% 135%,
+    145% 145%,
+    100% 100%;
+  background-repeat: no-repeat;
+  font-family: 'Avenir Next', Avenir, 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+  animation: atmospheric-sky-drift 20s ease-in-out infinite alternate;
+}
+
+html[data-theme='atmospheric-glass'] .theme-selector select {
+  min-width: 10.75rem;
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(225, 243, 252, 0.18);
+  box-shadow:
+    0 12px 35px rgba(19, 62, 91, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+
+html[data-theme='atmospheric-glass'] .theme-selector select:hover {
+  background: rgba(225, 243, 252, 0.27);
+}
+
+html[data-theme='atmospheric-glass'] aside {
+  border-color: rgba(231, 247, 255, 0.16);
+  background: linear-gradient(165deg, rgba(224, 243, 252, 0.18), rgba(32, 82, 116, 0.2));
+  box-shadow: 16px 0 50px rgba(18, 56, 82, 0.12);
+  backdrop-filter: blur(36px) saturate(145%);
+}
+
+html[data-theme='atmospheric-glass'] aside input,
+html[data-theme='atmospheric-glass'] aside > button,
+html[data-theme='atmospheric-glass'] aside > form,
+html[data-theme='atmospheric-glass'] aside > div:last-child > button,
+html[data-theme='atmospheric-glass'] aside > div:last-child > p {
+  border-color: rgba(237, 249, 255, 0.26);
+  background: linear-gradient(145deg, rgba(239, 250, 255, 0.17), rgba(202, 235, 250, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    0 12px 30px rgba(20, 61, 89, 0.1);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+
+html[data-theme='atmospheric-glass'] aside > div:last-child > button:hover,
+html[data-theme='atmospheric-glass'] aside > button:hover {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: linear-gradient(145deg, rgba(247, 253, 255, 0.25), rgba(203, 237, 252, 0.13));
+}
+
+html[data-theme='atmospheric-glass'] aside > div:last-child > button:focus,
+html[data-theme='atmospheric-glass'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: rgba(255, 255, 255, 0.52);
+  background: linear-gradient(145deg, rgba(239, 251, 255, 0.31), rgba(129, 205, 238, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 16px 38px rgba(17, 62, 94, 0.2);
+}
+
+html[data-theme='atmospheric-glass'] main > div {
+  gap: 1rem;
+}
+
+html[data-theme='atmospheric-glass'] main header h1,
+html[data-theme='atmospheric-glass'] main header h1 + div {
+  text-shadow: 0 5px 28px rgba(23, 66, 96, 0.23);
+}
+
+html[data-theme='atmospheric-glass'] main section {
+  border-color: rgba(238, 250, 255, 0.29);
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgba(239, 250, 255, 0.17), rgba(207, 237, 250, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 18px 44px rgba(17, 59, 89, 0.13);
+  backdrop-filter: blur(30px) saturate(145%);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+html[data-theme='atmospheric-glass'] main section:hover {
+  transform: translateY(-1px);
+  border-color: rgba(248, 253, 255, 0.38);
+  background: linear-gradient(145deg, rgba(246, 253, 255, 0.21), rgba(207, 237, 250, 0.11));
+}
+
+html[data-theme='atmospheric-glass'] main section > header,
+html[data-theme='atmospheric-glass'] main section > p:first-child {
+  border-color: rgba(236, 249, 255, 0.17);
+}
+
+html[data-theme='atmospheric-glass'] main footer button {
+  border-color: rgba(240, 251, 255, 0.3);
+  background: rgba(225, 245, 253, 0.15);
+  box-shadow: 0 10px 28px rgba(18, 58, 87, 0.12);
+  backdrop-filter: blur(24px) saturate(145%);
+}
+
+html[data-theme='atmospheric-glass'] .weather-map-overlay__header > div,
+html[data-theme='atmospheric-glass'] .weather-map-overlay__close {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(36, 84, 113, 0.56);
+  backdrop-filter: blur(30px) saturate(145%);
+}
+
+html[data-theme='meteorological-station'] body {
+  background-color: #081725;
+  background-image:
+    linear-gradient(rgba(73, 119, 145, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(73, 119, 145, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 72% 8%, rgba(31, 101, 135, 0.28), transparent 42%),
+    linear-gradient(155deg, #0d2638 0%, #081a29 48%, #06121d 100%);
+  background-attachment: fixed;
+  background-size:
+    32px 32px,
+    32px 32px,
+    100% 100%,
+    100% 100%;
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  color: #edf4f5;
+  font-family: 'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', ui-sans-serif, sans-serif;
+}
+
+html[data-theme='meteorological-station'] .theme-selector {
+  color: #f4f7f4;
+}
+
+html[data-theme='meteorological-station'] .theme-selector select {
+  min-width: 13rem;
+  border-color: #31556a;
+  border-radius: 4px;
+  background: #0b2131;
+  box-shadow:
+    inset 3px 0 0 #f28a2e,
+    0 8px 18px rgba(0, 0, 0, 0.24);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-theme='meteorological-station'] .theme-selector select:hover {
+  border-color: #4f7890;
+  background: #102b3d;
+}
+
+html[data-theme='meteorological-station'] aside {
+  border-color: #26475a;
+  background: rgba(5, 19, 30, 0.92);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme='meteorological-station'] aside input,
+html[data-theme='meteorological-station'] aside > button,
+html[data-theme='meteorological-station'] aside > form,
+html[data-theme='meteorological-station'] aside > div:last-child > button,
+html[data-theme='meteorological-station'] aside > div:last-child > p {
+  border-color: #294b5e;
+  border-radius: 4px;
+  background: rgba(13, 39, 56, 0.94);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+html[data-theme='meteorological-station'] aside > button,
+html[data-theme='meteorological-station'] aside > form button,
+html[data-theme='meteorological-station'] aside > div:last-child > button {
+  font-family: inherit;
+}
+
+html[data-theme='meteorological-station'] aside > button:hover,
+html[data-theme='meteorological-station'] aside > div:last-child > button:hover {
+  border-color: #47758c;
+  background: #14384d;
+}
+
+html[data-theme='meteorological-station'] aside > div:last-child > button:focus,
+html[data-theme='meteorological-station'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: #f28a2e;
+  background: #15394d;
+  box-shadow: inset 4px 0 0 #f28a2e;
+}
+
+html[data-theme='meteorological-station'] main > div {
+  gap: 0.5rem;
+  max-width: 68rem;
+}
+
+html[data-theme='meteorological-station'] main > div > header {
+  padding-top: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+html[data-theme='meteorological-station'] main header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+html[data-theme='meteorological-station'] main header h1 + div {
+  margin-top: 0.25rem;
+  color: #ff9b42;
+  font-size: 5.75rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 30px rgba(242, 138, 46, 0.15);
+}
+
+html[data-theme='meteorological-station'] main section {
+  border-color: #274b60;
+  border-top-color: #f28a2e;
+  border-radius: 5px;
+  background: rgba(7, 26, 40, 0.91);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+html[data-theme='meteorological-station'] main section > header,
+html[data-theme='meteorological-station'] main section > p:first-child {
+  border-color: #23475b;
+  background: rgba(17, 49, 68, 0.48);
+}
+
+html[data-theme='meteorological-station'] main section header,
+html[data-theme='meteorological-station'] main section header *,
+html[data-theme='meteorological-station'] main section > p:first-child {
+  font-family: inherit;
+  letter-spacing: 0.12em;
+}
+
+html[data-theme='meteorological-station'] main section li {
+  border-color: rgba(65, 105, 126, 0.36);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme='meteorological-station'] main footer button {
+  border-color: #345d73;
+  border-radius: 4px;
+  background: #102e41;
+  box-shadow: none;
+  backdrop-filter: none;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-theme='meteorological-station'] .weather-map .leaflet-tile-pane {
+  filter: saturate(0.48) contrast(1.15) brightness(0.88) hue-rotate(156deg);
+}
+
+html[data-theme='meteorological-station'] .weather-map-pin {
+  border-radius: 2px 50% 50% 50%;
+  background: #183e53;
+}
+
+html[data-theme='meteorological-station'] .weather-map-pin--selected {
+  background: #f28a2e;
+  box-shadow: 0 6px 16px rgba(242, 138, 46, 0.42);
+}
+
+html[data-theme='meteorological-station'] .weather-map-overlay__header > div,
+html[data-theme='meteorological-station'] .weather-map-overlay__close {
+  border-color: #456b7f;
+  border-radius: 4px;
+  background: rgba(7, 27, 41, 0.93);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
+}
+
+html[data-theme='soft-forecast'] body {
+  background:
+    radial-gradient(70% 55% at 88% 5%, rgba(255, 221, 203, 0.48) 0%, transparent 68%),
+    radial-gradient(68% 60% at 6% 92%, rgba(196, 190, 235, 0.55) 0%, transparent 70%),
+    radial-gradient(60% 50% at 48% 45%, rgba(219, 238, 248, 0.28) 0%, transparent 72%),
+    linear-gradient(145deg, #89abc3 0%, #7f9db9 35%, #777fa9 70%, #6a7195 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: #fffaf3;
+  font-family: ui-rounded, 'Nunito Sans', 'Avenir Next', system-ui, sans-serif;
+}
+
+html[data-theme='soft-forecast'] .theme-selector {
+  color: #fffaf5;
+}
+
+html[data-theme='soft-forecast'] .theme-selector select {
+  min-width: 9.75rem;
+  border-color: rgba(255, 248, 241, 0.38);
+  border-radius: 1.25rem;
+  background: rgba(112, 100, 150, 0.33);
+  box-shadow: 0 10px 28px rgba(70, 65, 106, 0.18);
+  font-family: inherit;
+  font-weight: 650;
+  backdrop-filter: blur(20px) saturate(130%);
+}
+
+html[data-theme='soft-forecast'] .theme-selector select:hover {
+  background: rgba(112, 100, 150, 0.44);
+}
+
+html[data-theme='soft-forecast'] aside {
+  border-color: rgba(255, 245, 237, 0.13);
+  background: linear-gradient(165deg, rgba(112, 128, 166, 0.34), rgba(99, 91, 137, 0.3));
+  box-shadow: 14px 0 38px rgba(66, 66, 105, 0.12);
+  backdrop-filter: blur(28px) saturate(125%);
+}
+
+html[data-theme='soft-forecast'] aside input,
+html[data-theme='soft-forecast'] aside > button,
+html[data-theme='soft-forecast'] aside > form,
+html[data-theme='soft-forecast'] aside > div:last-child > button,
+html[data-theme='soft-forecast'] aside > div:last-child > p {
+  border-color: rgba(255, 248, 241, 0.22);
+  border-radius: 1.4rem;
+  background: rgba(255, 245, 237, 0.1);
+  box-shadow:
+    0 10px 24px rgba(63, 66, 105, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme='soft-forecast'] aside input {
+  border-radius: 1rem;
+}
+
+html[data-theme='soft-forecast'] aside > button:hover,
+html[data-theme='soft-forecast'] aside > div:last-child > button:hover {
+  border-color: rgba(255, 248, 241, 0.34);
+  background: rgba(255, 239, 229, 0.16);
+}
+
+html[data-theme='soft-forecast'] aside > div:last-child > button:focus,
+html[data-theme='soft-forecast'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: rgba(255, 238, 226, 0.48);
+  background: linear-gradient(145deg, rgba(255, 225, 210, 0.24), rgba(214, 204, 242, 0.2));
+  box-shadow:
+    0 14px 32px rgba(70, 68, 111, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+html[data-theme='soft-forecast'] main > div {
+  max-width: 60rem;
+  gap: 1.25rem;
+}
+
+html[data-theme='soft-forecast'] main > div > header {
+  padding-top: 2.5rem;
+  padding-bottom: 0.75rem;
+}
+
+html[data-theme='soft-forecast'] main header h1 {
+  font-weight: 450;
+  letter-spacing: -0.025em;
+}
+
+html[data-theme='soft-forecast'] main header h1 + div {
+  color: #fff5ea;
+  font-weight: 250;
+  text-shadow: 0 8px 30px rgba(82, 75, 117, 0.17);
+}
+
+html[data-theme='soft-forecast'] main section {
+  border-color: rgba(255, 248, 241, 0.23);
+  border-radius: 1.75rem;
+  background: linear-gradient(145deg, rgba(255, 248, 241, 0.13), rgba(222, 218, 246, 0.09));
+  box-shadow:
+    0 16px 36px rgba(65, 68, 108, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(120%);
+}
+
+html[data-theme='soft-forecast'] main section > header,
+html[data-theme='soft-forecast'] main section > p:first-child {
+  border-color: rgba(255, 246, 238, 0.14);
+}
+
+html[data-theme='soft-forecast'] main section header {
+  color: rgba(255, 246, 238, 0.72);
+}
+
+html[data-theme='soft-forecast'] main section li {
+  border-color: rgba(255, 246, 238, 0.12);
+}
+
+html[data-theme='soft-forecast'] main footer button {
+  border-color: rgba(255, 248, 241, 0.25);
+  border-radius: 1.25rem;
+  background: rgba(255, 241, 232, 0.11);
+  box-shadow: 0 10px 24px rgba(67, 67, 105, 0.1);
+  backdrop-filter: blur(18px);
+  font-family: inherit;
+}
+
+html[data-theme='soft-forecast'] .weather-map .leaflet-tile-pane {
+  filter: saturate(0.58) contrast(0.9) brightness(1.08) hue-rotate(8deg);
+}
+
+html[data-theme='soft-forecast'] .weather-map-pin {
+  border-color: #fff8f1;
+  background: #8c82ae;
+  box-shadow: 0 6px 14px rgba(73, 69, 107, 0.28);
+}
+
+html[data-theme='soft-forecast'] .weather-map-pin--selected {
+  background: #ef9e83;
+  box-shadow: 0 7px 18px rgba(239, 158, 131, 0.42);
+}
+
+html[data-theme='soft-forecast'] .weather-map-overlay__header > div,
+html[data-theme='soft-forecast'] .weather-map-overlay__close {
+  border-color: rgba(255, 248, 241, 0.42);
+  background: rgba(104, 100, 143, 0.7);
+  box-shadow: 0 12px 30px rgba(66, 65, 101, 0.18);
+  backdrop-filter: blur(24px) saturate(125%);
+}
+
+@media (min-width: 1024px) {
+  html[data-theme='soft-forecast'] aside {
+    width: 23rem;
+  }
+}
+
+html[data-theme='midnight-radar'] body {
+  background-color: #02070d;
+  background-image:
+    repeating-radial-gradient(
+      circle at 76% 42%,
+      transparent 0 78px,
+      rgba(40, 226, 180, 0.045) 79px 80px
+    ),
+    linear-gradient(90deg, transparent 49.9%, rgba(69, 213, 225, 0.035) 50%, transparent 50.1%),
+    linear-gradient(transparent 49.9%, rgba(69, 213, 225, 0.035) 50%, transparent 50.1%),
+    radial-gradient(circle at 76% 42%, rgba(19, 126, 137, 0.15), transparent 36%),
+    linear-gradient(145deg, #06131f 0%, #030b13 52%, #01050a 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: #e7fbfb;
+  font-family: Inter, 'Helvetica Neue', ui-sans-serif, system-ui, sans-serif;
+}
+
+html[data-theme='midnight-radar'] .theme-selector {
+  color: #d9ffff;
+}
+
+html[data-theme='midnight-radar'] .theme-selector select {
+  min-width: 10.75rem;
+  border-color: rgba(58, 220, 226, 0.42);
+  border-radius: 7px;
+  background: rgba(3, 18, 29, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(34, 242, 184, 0.08),
+    0 0 22px rgba(30, 207, 211, 0.12);
+  color: #e6ffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(16px);
+}
+
+html[data-theme='midnight-radar'] .theme-selector select:hover {
+  border-color: rgba(57, 238, 221, 0.62);
+  background: rgba(5, 29, 42, 0.96);
+}
+
+html[data-theme='midnight-radar'] aside {
+  border-color: rgba(46, 188, 199, 0.2);
+  background: rgba(1, 9, 16, 0.93);
+  box-shadow:
+    10px 0 34px rgba(0, 0, 0, 0.34),
+    1px 0 0 rgba(31, 234, 187, 0.05);
+  backdrop-filter: blur(16px);
+}
+
+html[data-theme='midnight-radar'] aside input,
+html[data-theme='midnight-radar'] aside > button,
+html[data-theme='midnight-radar'] aside > form,
+html[data-theme='midnight-radar'] aside > div:last-child > button,
+html[data-theme='midnight-radar'] aside > div:last-child > p {
+  border-color: rgba(52, 188, 199, 0.27);
+  border-radius: 7px;
+  background: rgba(5, 24, 36, 0.88);
+  box-shadow: inset 0 0 18px rgba(26, 155, 162, 0.025);
+  backdrop-filter: none;
+}
+
+html[data-theme='midnight-radar'] aside > button,
+html[data-theme='midnight-radar'] aside > form button,
+html[data-theme='midnight-radar'] aside > div:last-child > button {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.025em;
+}
+
+html[data-theme='midnight-radar'] aside > button:hover,
+html[data-theme='midnight-radar'] aside > div:last-child > button:hover {
+  border-color: rgba(43, 233, 203, 0.46);
+  background: rgba(6, 37, 48, 0.95);
+}
+
+html[data-theme='midnight-radar'] aside > div:last-child > button:focus,
+html[data-theme='midnight-radar'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: #2be9cb;
+  background: rgba(7, 48, 58, 0.96);
+  box-shadow:
+    inset 3px 0 0 #2be9cb,
+    0 0 20px rgba(43, 233, 203, 0.1);
+}
+
+html[data-theme='midnight-radar'] main > div {
+  max-width: 70rem;
+  gap: 0.625rem;
+}
+
+html[data-theme='midnight-radar'] main > div > header {
+  padding-top: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+html[data-theme='midnight-radar'] main header h1 {
+  color: #bdffff;
+  font-weight: 450;
+  letter-spacing: 0.015em;
+}
+
+html[data-theme='midnight-radar'] main header h1 + div {
+  margin-top: 0.25rem;
+  color: #37f0c0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 5.8rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.07em;
+  text-shadow: 0 0 26px rgba(55, 240, 192, 0.19);
+}
+
+html[data-theme='midnight-radar'] main section {
+  border-color: rgba(44, 191, 207, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(4, 20, 32, 0.94), rgba(2, 13, 23, 0.94));
+  box-shadow:
+    0 0 0 1px rgba(33, 235, 186, 0.035),
+    0 0 25px rgba(23, 170, 185, 0.055),
+    0 12px 26px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme='midnight-radar'] main section:hover {
+  border-color: rgba(45, 229, 213, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(33, 235, 186, 0.055),
+    0 0 28px rgba(23, 170, 185, 0.09),
+    0 12px 26px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme='midnight-radar'] main section > header,
+html[data-theme='midnight-radar'] main section > p:first-child {
+  border-color: rgba(46, 180, 196, 0.19);
+  background: rgba(7, 31, 44, 0.54);
+}
+
+html[data-theme='midnight-radar'] main section header,
+html[data-theme='midnight-radar'] main section > p:first-child {
+  color: rgba(106, 237, 228, 0.76);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+html[data-theme='midnight-radar'] main section li,
+html[data-theme='midnight-radar'] main section [class*='tabular-nums'] {
+  border-color: rgba(53, 156, 174, 0.2);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme='midnight-radar'] main footer button {
+  border-color: rgba(47, 198, 205, 0.32);
+  border-radius: 7px;
+  background: rgba(5, 29, 41, 0.9);
+  box-shadow: 0 0 18px rgba(34, 211, 195, 0.07);
+  backdrop-filter: none;
+  color: #bffcf2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-theme='midnight-radar'] .weather-map {
+  background: #07131a;
+}
+
+html[data-theme='midnight-radar'] .weather-map .leaflet-tile-pane {
+  filter: saturate(0.28) contrast(1.45) brightness(0.48) hue-rotate(128deg) invert(0.04);
+}
+
+html[data-theme='midnight-radar'] .weather-map-pin {
+  border-color: #bafff2;
+  background: #0aa5b1;
+  box-shadow: 0 0 14px rgba(24, 224, 217, 0.38);
+}
+
+html[data-theme='midnight-radar'] .weather-map-pin--selected {
+  background: #38f0a9;
+  box-shadow: 0 0 18px rgba(56, 240, 169, 0.56);
+}
+
+html[data-theme='midnight-radar'] .weather-map-tooltip {
+  border-color: rgba(69, 232, 220, 0.36);
+  background: rgba(2, 18, 27, 0.94);
+  box-shadow: 0 0 16px rgba(35, 217, 203, 0.13);
+}
+
+html[data-theme='midnight-radar'] .weather-map-overlay__header > div,
+html[data-theme='midnight-radar'] .weather-map-overlay__close {
+  border-color: rgba(58, 222, 218, 0.42);
+  border-radius: 8px;
+  background: rgba(2, 15, 24, 0.94);
+  box-shadow: 0 0 24px rgba(35, 217, 203, 0.11);
+  backdrop-filter: blur(16px);
+}
+
+html[data-theme='editorial-weather'] body {
+  background-color: #eeeae1;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(52, 47, 40, 0.018) 0 1px, transparent 1px 4px),
+    radial-gradient(circle at 78% 5%, rgba(179, 194, 201, 0.24), transparent 34%),
+    linear-gradient(135deg, #f4f1ea 0%, #ebe7de 58%, #e3e0d8 100%);
+  background-attachment: fixed;
+  background-repeat: repeat, no-repeat, no-repeat;
+  color: #262522;
+  font-family: 'Helvetica Neue', Helvetica, Arial, ui-sans-serif, sans-serif;
+}
+
+html[data-theme='editorial-weather'] .theme-selector {
+  color: #252522;
+}
+
+html[data-theme='editorial-weather'] .theme-selector select {
+  min-width: 11.25rem;
+  border-color: #888781;
+  border-radius: 2px;
+  background: rgba(247, 244, 237, 0.94);
+  box-shadow: 0 2px 0 rgba(41, 40, 37, 0.14);
+  color: #252522;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme='editorial-weather'] .theme-selector select:hover {
+  border-color: #4b5960;
+  background: #faf8f2;
+}
+
+html[data-theme='editorial-weather'] aside {
+  border-color: #aaa79f;
+  background: rgba(225, 222, 213, 0.88);
+  box-shadow: 8px 0 20px rgba(48, 45, 39, 0.06);
+  color: #282824;
+  backdrop-filter: blur(10px);
+}
+
+html[data-theme='editorial-weather'] aside [class*='text-white'],
+html[data-theme='editorial-weather'] main [class*='text-white'] {
+  color: rgba(38, 37, 34, 0.76);
+}
+
+html[data-theme='editorial-weather'] aside [class*='border-white'],
+html[data-theme='editorial-weather'] main [class*='border-white'] {
+  border-color: rgba(55, 54, 50, 0.18);
+}
+
+html[data-theme='editorial-weather'] aside input,
+html[data-theme='editorial-weather'] aside > button,
+html[data-theme='editorial-weather'] aside > form,
+html[data-theme='editorial-weather'] aside > div:last-child > button,
+html[data-theme='editorial-weather'] aside > div:last-child > p {
+  border-color: #aaa79f;
+  border-radius: 2px;
+  background: rgba(245, 242, 234, 0.62);
+  box-shadow: none;
+  color: #2a2926;
+  backdrop-filter: none;
+}
+
+html[data-theme='editorial-weather'] aside input::placeholder {
+  color: rgba(44, 43, 39, 0.48);
+}
+
+html[data-theme='editorial-weather'] aside > button,
+html[data-theme='editorial-weather'] aside > form button,
+html[data-theme='editorial-weather'] aside > div:last-child > button {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+html[data-theme='editorial-weather'] aside > button:hover,
+html[data-theme='editorial-weather'] aside > div:last-child > button:hover {
+  border-color: #677b86;
+  background: rgba(249, 247, 241, 0.9);
+}
+
+html[data-theme='editorial-weather'] aside > div:last-child > button:focus,
+html[data-theme='editorial-weather'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: #556f7c;
+  background: rgba(249, 247, 241, 0.96);
+  box-shadow: inset 4px 0 0 #a8463c;
+}
+
+html[data-theme='editorial-weather'] main > div {
+  max-width: 65rem;
+  gap: 0.875rem;
+}
+
+html[data-theme='editorial-weather'] main > div > header {
+  padding-top: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(45, 44, 40, 0.32);
+}
+
+html[data-theme='editorial-weather'] main header h1 {
+  color: #22211f;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 2.65rem;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+html[data-theme='editorial-weather'] main header h1 + div {
+  margin-top: 0.25rem;
+  color: #3e6578;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 6.15rem;
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.055em;
+  text-shadow: none;
+}
+
+html[data-theme='editorial-weather'] main > div > header [class*='text-white'] {
+  color: rgba(37, 36, 33, 0.7);
+}
+
+html[data-theme='editorial-weather'] main section {
+  border-color: rgba(53, 52, 48, 0.24);
+  border-top-color: #42413d;
+  border-radius: 2px;
+  background: rgba(248, 246, 240, 0.46);
+  box-shadow: none;
+  color: #292825;
+  backdrop-filter: none;
+}
+
+html[data-theme='editorial-weather'] main section > header,
+html[data-theme='editorial-weather'] main section > p:first-child {
+  border-color: rgba(53, 52, 48, 0.2);
+  background: rgba(229, 227, 220, 0.42);
+}
+
+html[data-theme='editorial-weather'] main section header,
+html[data-theme='editorial-weather'] main section > p:first-child {
+  color: #526874;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+html[data-theme='editorial-weather'] main section [class*='text-white/9'],
+html[data-theme='editorial-weather'] main section [class*='text-white'] strong,
+html[data-theme='editorial-weather'] main section [class*='font-medium'] {
+  color: #292825;
+}
+
+html[data-theme='editorial-weather'] main section li {
+  border-color: rgba(55, 54, 50, 0.14);
+}
+
+html[data-theme='editorial-weather'] main footer,
+html[data-theme='editorial-weather'] main footer [class*='text-white'] {
+  color: rgba(42, 41, 38, 0.58);
+}
+
+html[data-theme='editorial-weather'] main footer button {
+  border-color: #8d8b84;
+  border-radius: 2px;
+  background: rgba(247, 245, 239, 0.8);
+  box-shadow: none;
+  color: #334f5c;
+  backdrop-filter: none;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-theme='editorial-weather'] .weather-map .leaflet-tile-pane {
+  filter: grayscale(0.72) sepia(0.12) saturate(0.62) contrast(0.94) brightness(1.04);
+}
+
+html[data-theme='editorial-weather'] .weather-map-pin {
+  border-color: #f5f1e8;
+  background: #536b77;
+  box-shadow: 0 4px 8px rgba(48, 47, 43, 0.28);
+}
+
+html[data-theme='editorial-weather'] .weather-map-pin--selected {
+  background: #a8463c;
+  box-shadow: 0 5px 10px rgba(133, 54, 47, 0.3);
+}
+
+html[data-theme='editorial-weather'] .weather-map-tooltip {
+  border-color: rgba(53, 52, 48, 0.3);
+  border-radius: 2px;
+  background: rgba(246, 243, 236, 0.95);
+  color: #282723;
+  box-shadow: 0 4px 10px rgba(49, 47, 42, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme='editorial-weather'] .weather-map-tooltip.leaflet-tooltip-top::before {
+  border-top-color: rgba(246, 243, 236, 0.95);
+}
+
+html[data-theme='editorial-weather'] .weather-map-overlay__header > div,
+html[data-theme='editorial-weather'] .weather-map-overlay__close {
+  border-color: #77756e;
+  border-radius: 2px;
+  background: rgba(247, 244, 237, 0.94);
+  color: #282723;
+  box-shadow: 0 5px 16px rgba(49, 47, 42, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+html[data-theme='editorial-weather'] .weather-map-overlay__eyebrow {
+  color: rgba(40, 39, 35, 0.55);
+}
+
+html[data-theme='solar-minimal'] body {
+  background-color: #f5f8fa;
+  background-image:
+    radial-gradient(circle at 78% 12%, rgba(255, 213, 54, 0.3) 0 8%, transparent 28%),
+    radial-gradient(circle at 12% 90%, rgba(87, 180, 232, 0.13) 0%, transparent 34%),
+    linear-gradient(145deg, #ffffff 0%, #f6f9fb 52%, #edf4f7 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: #18232b;
+  font-family: Inter, 'Helvetica Neue', ui-sans-serif, system-ui, sans-serif;
+}
+
+html[data-theme='solar-minimal'] .theme-selector {
+  color: #1b2b34;
+}
+
+html[data-theme='solar-minimal'] .theme-selector select {
+  min-width: 9.5rem;
+  border-color: transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(54, 83, 99, 0.11);
+  color: #1b2b34;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme='solar-minimal'] .theme-selector select:hover {
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(54, 83, 99, 0.15);
+}
+
+html[data-theme='solar-minimal'] aside {
+  border-color: rgba(57, 79, 91, 0.08);
+  background: rgba(240, 245, 247, 0.8);
+  box-shadow: 10px 0 30px rgba(59, 82, 94, 0.055);
+  color: #1b2931;
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme='solar-minimal'] aside [class*='text-white'],
+html[data-theme='solar-minimal'] main [class*='text-white'] {
+  color: rgba(27, 41, 49, 0.68);
+}
+
+html[data-theme='solar-minimal'] aside [class*='border-white'],
+html[data-theme='solar-minimal'] main [class*='border-white'] {
+  border-color: rgba(48, 72, 84, 0.1);
+}
+
+html[data-theme='solar-minimal'] aside input,
+html[data-theme='solar-minimal'] aside > button,
+html[data-theme='solar-minimal'] aside > form,
+html[data-theme='solar-minimal'] aside > div:last-child > button,
+html[data-theme='solar-minimal'] aside > div:last-child > p {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 5px 18px rgba(62, 86, 98, 0.055);
+  color: #1c2a32;
+  backdrop-filter: none;
+}
+
+html[data-theme='solar-minimal'] aside input {
+  border-radius: 999px;
+}
+
+html[data-theme='solar-minimal'] aside input::placeholder {
+  color: rgba(38, 55, 64, 0.44);
+}
+
+html[data-theme='solar-minimal'] aside > button,
+html[data-theme='solar-minimal'] aside > form,
+html[data-theme='solar-minimal'] aside > div:last-child > button,
+html[data-theme='solar-minimal'] aside > div:last-child > p {
+  border-radius: 1.25rem;
+}
+
+html[data-theme='solar-minimal'] aside > button:hover,
+html[data-theme='solar-minimal'] aside > div:last-child > button:hover {
+  background: #ffffff;
+  box-shadow: 0 7px 22px rgba(62, 86, 98, 0.09);
+}
+
+html[data-theme='solar-minimal'] aside > div:last-child > button:focus,
+html[data-theme='solar-minimal'] aside > div:last-child > button[class*='bg-white/20'] {
+  background: #ffffff;
+  box-shadow:
+    inset 4px 0 0 #ffd536,
+    0 8px 22px rgba(62, 86, 98, 0.1);
+}
+
+html[data-theme='solar-minimal'] main > div {
+  max-width: 56rem;
+  gap: 1.5rem;
+}
+
+html[data-theme='solar-minimal'] main > div > header {
+  padding-top: 3.25rem;
+  padding-bottom: 1.25rem;
+}
+
+html[data-theme='solar-minimal'] main header h1 {
+  color: #18272f;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+html[data-theme='solar-minimal'] main header h1 + div {
+  margin-top: 0.5rem;
+  color: #168dcc;
+  font-size: 6.25rem;
+  font-weight: 250;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.065em;
+  text-shadow: none;
+}
+
+html[data-theme='solar-minimal'] main > div > header [class*='text-white'] {
+  color: rgba(29, 46, 55, 0.64);
+}
+
+html[data-theme='solar-minimal'] main section {
+  border-color: transparent;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 32px rgba(63, 89, 102, 0.065);
+  color: #1c2a32;
+  backdrop-filter: blur(10px);
+}
+
+html[data-theme='solar-minimal'] main section > header,
+html[data-theme='solar-minimal'] main section > p:first-child {
+  border-color: rgba(53, 78, 90, 0.08);
+  background: transparent;
+}
+
+html[data-theme='solar-minimal'] main section header,
+html[data-theme='solar-minimal'] main section > p:first-child {
+  color: #48707f;
+  font-weight: 700;
+}
+
+html[data-theme='solar-minimal'] main section [class*='text-white/9'],
+html[data-theme='solar-minimal'] main section [class*='text-white'] strong,
+html[data-theme='solar-minimal'] main section [class*='font-medium'] {
+  color: #19282f;
+}
+
+html[data-theme='solar-minimal'] main section li {
+  border-color: rgba(49, 75, 87, 0.09);
+}
+
+html[data-theme='solar-minimal'] main footer,
+html[data-theme='solar-minimal'] main footer [class*='text-white'] {
+  color: rgba(31, 48, 57, 0.48);
+}
+
+html[data-theme='solar-minimal'] main footer button {
+  border-color: transparent;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 7px 20px rgba(59, 84, 96, 0.08);
+  color: #167bae;
+  backdrop-filter: none;
+  font-family: inherit;
+}
+
+html[data-theme='solar-minimal'] .weather-map .leaflet-tile-pane {
+  filter: saturate(0.72) contrast(0.9) brightness(1.08) hue-rotate(6deg);
+}
+
+html[data-theme='solar-minimal'] .weather-map-pin {
+  border-color: #ffffff;
+  background: #1b9bda;
+  box-shadow: 0 5px 12px rgba(35, 112, 151, 0.24);
+}
+
+html[data-theme='solar-minimal'] .weather-map-pin--selected {
+  background: #f2be18;
+  box-shadow: 0 6px 15px rgba(224, 173, 11, 0.35);
+}
+
+html[data-theme='solar-minimal'] .weather-map-tooltip {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.94);
+  color: #20313a;
+  box-shadow: 0 7px 20px rgba(52, 78, 90, 0.14);
+}
+
+html[data-theme='solar-minimal'] .weather-map-tooltip.leaflet-tooltip-top::before {
+  border-top-color: rgba(255, 255, 255, 0.94);
+}
+
+html[data-theme='solar-minimal'] .weather-map-overlay__header > div,
+html[data-theme='solar-minimal'] .weather-map-overlay__close {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.94);
+  color: #20313a;
+  box-shadow: 0 8px 24px rgba(52, 78, 90, 0.15);
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme='solar-minimal'] .weather-map-overlay__eyebrow {
+  color: rgba(34, 53, 62, 0.48);
+}
+
+html[data-theme='retro-broadcast'] body {
+  background-color: #102696;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px),
+    radial-gradient(circle at 84% 12%, rgba(255, 212, 59, 0.38) 0 7%, transparent 7.25%),
+    linear-gradient(135deg, transparent 0 68%, rgba(230, 50, 167, 0.24) 68% 76%, transparent 76%),
+    linear-gradient(155deg, #214bd0 0%, #1937b1 48%, #0d237e 100%);
+  background-attachment: fixed;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  color: #ffffff;
+  font-family: 'Arial Black', 'Trebuchet MS', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+html[data-theme='retro-broadcast'] .theme-selector select {
+  min-width: 10.75rem;
+  border: 3px solid #fff7cf;
+  border-radius: 4px;
+  background: #142a98;
+  color: #ffffff;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.2),
+    4px 4px 0 #e632a7;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] .theme-selector select:hover {
+  background: #2048ca;
+}
+
+html[data-theme='retro-broadcast'] .theme-selector select:focus-visible {
+  box-shadow:
+    0 0 0 3px #ffd43b,
+    5px 5px 0 #e632a7;
+}
+
+html[data-theme='retro-broadcast'] aside {
+  border-color: #07165d;
+  border-width: 3px;
+  background:
+    linear-gradient(135deg, rgba(0, 184, 169, 0.13) 0 12%, transparent 12%),
+    linear-gradient(180deg, rgba(10, 31, 133, 0.98), rgba(8, 24, 101, 0.98));
+  box-shadow: 8px 0 0 rgba(7, 22, 93, 0.34);
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] aside input,
+html[data-theme='retro-broadcast'] aside > button,
+html[data-theme='retro-broadcast'] aside > form,
+html[data-theme='retro-broadcast'] aside > div:last-child > button,
+html[data-theme='retro-broadcast'] aside > div:last-child > p {
+  border: 3px solid #466de0;
+  border-radius: 5px;
+  background: #132b91;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    3px 3px 0 #07175e;
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] aside input {
+  color: #ffffff;
+  font-family: Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+html[data-theme='retro-broadcast'] aside input::placeholder {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+html[data-theme='retro-broadcast'] aside > button,
+html[data-theme='retro-broadcast'] aside > form button,
+html[data-theme='retro-broadcast'] aside > div:last-child > button {
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+
+html[data-theme='retro-broadcast'] aside > button:hover,
+html[data-theme='retro-broadcast'] aside > div:last-child > button:hover {
+  border-color: #00c9b8;
+  background: #1a3daf;
+}
+
+html[data-theme='retro-broadcast'] aside > div:last-child > button:focus,
+html[data-theme='retro-broadcast'] aside > div:last-child > button[class*='bg-white/20'] {
+  border-color: #fff2a6;
+  background: #2449b9;
+  box-shadow:
+    inset 6px 0 0 #ffd43b,
+    4px 4px 0 #e632a7;
+}
+
+html[data-theme='retro-broadcast'] main > div {
+  max-width: 66rem;
+  gap: 0.9rem;
+}
+
+html[data-theme='retro-broadcast'] main > div > header {
+  padding-top: 2rem;
+  padding-bottom: 0.75rem;
+}
+
+html[data-theme='retro-broadcast'] main header h1 {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-shadow: 3px 3px 0 #e632a7;
+  text-transform: uppercase;
+}
+
+html[data-theme='retro-broadcast'] main header h1 + div {
+  margin-top: 0.25rem;
+  color: #ffd43b;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 6.25rem;
+  font-weight: 900;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  text-shadow:
+    4px 4px 0 #e632a7,
+    7px 7px 0 #07175e;
+}
+
+html[data-theme='retro-broadcast'] main section {
+  border: 3px solid #fff4b5;
+  border-radius: 6px;
+  background: linear-gradient(145deg, rgba(34, 75, 194, 0.96), rgba(15, 43, 145, 0.97));
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.14),
+    inset -3px -3px 0 rgba(2, 15, 79, 0.3),
+    5px 5px 0 rgba(7, 23, 94, 0.72);
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] main section > header,
+html[data-theme='retro-broadcast'] main section > p:first-child {
+  border-color: rgba(255, 244, 181, 0.42);
+  background: rgba(4, 24, 113, 0.42);
+}
+
+html[data-theme='retro-broadcast'] main section header,
+html[data-theme='retro-broadcast'] main section > p:first-child {
+  color: #fff0a1;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-shadow: 1px 1px 0 #07175e;
+}
+
+html[data-theme='retro-broadcast'] main section li,
+html[data-theme='retro-broadcast'] main section [class*='tabular-nums'] {
+  border-color: rgba(255, 244, 181, 0.25);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme='retro-broadcast'] main footer button {
+  border: 3px solid #fff4b5;
+  border-radius: 5px;
+  background: #16349f;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.13),
+    4px 4px 0 #e632a7;
+  color: #ffffff;
+  backdrop-filter: none;
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-theme='retro-broadcast'] .weather-map {
+  background: #6fcac6;
+}
+
+html[data-theme='retro-broadcast'] .weather-map .leaflet-tile-pane {
+  filter: saturate(1.25) contrast(1.08) hue-rotate(8deg);
+}
+
+html[data-theme='retro-broadcast'] .weather-map .leaflet-control-attribution,
+html[data-theme='retro-broadcast'] .weather-map .leaflet-control-zoom {
+  border-radius: 3px;
+}
+
+html[data-theme='retro-broadcast'] .weather-map .leaflet-control-zoom {
+  border: 3px solid #142a98;
+  box-shadow: 3px 3px 0 rgba(7, 23, 94, 0.45);
+}
+
+html[data-theme='retro-broadcast'] .weather-map .leaflet-control-zoom a {
+  border-color: #b39b20;
+  background: #fff4b5;
+  color: #102696;
+  font-weight: 900;
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-pin {
+  border-color: #fff4b5;
+  border-radius: 3px 50% 50% 50%;
+  background: #00a99d;
+  box-shadow: 3px 3px 0 rgba(7, 23, 94, 0.55);
+}
+
+html[data-theme='retro-broadcast'] .weather-map-pin--selected {
+  background: #e632a7;
+  box-shadow:
+    3px 3px 0 #ffd43b,
+    6px 6px 0 rgba(7, 23, 94, 0.45);
+}
+
+html[data-theme='retro-broadcast'] .weather-map-tooltip {
+  border: 2px solid #fff4b5;
+  border-radius: 3px;
+  background: #142a98;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 rgba(7, 23, 94, 0.56);
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-tooltip.leaflet-tooltip-top::before {
+  border-top-color: #fff4b5;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-tooltip--selected {
+  border-color: #ffd43b;
+  background: #b91883;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-tooltip--selected.leaflet-tooltip-top::before {
+  border-top-color: #ffd43b;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-overlay__header > div,
+html[data-theme='retro-broadcast'] .weather-map-overlay__close {
+  border: 3px solid #fff4b5;
+  border-radius: 5px;
+  background: #142a98;
+  color: #ffffff;
+  box-shadow: 4px 4px 0 #e632a7;
+  backdrop-filter: none;
+}
+
+html[data-theme='retro-broadcast'] .weather-map-overlay__eyebrow {
+  color: #ffd43b;
+}
+
+@media (max-width: 420px) {
+  html[data-theme='retro-broadcast'] .theme-selector select {
+    min-width: 9.75rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  html[data-theme='retro-broadcast'] main header h1 + div {
+    font-size: 5.25rem;
+  }
+}
+
+@keyframes atmospheric-sky-drift {
+  from {
+    background-position:
+      0% 0%,
+      0% 100%,
+      35% 20%,
+      0 0;
+  }
+  to {
+    background-position:
+      8% 4%,
+      6% 94%,
+      48% 28%,
+      0 0;
+  }
+}
+
+.theme-selector {
+  position: fixed;
+  z-index: 90;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.theme-selector select {
+  min-width: 6.75rem;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  background: rgba(35, 48, 62, 0.46);
+  padding: 0.5rem 2rem 0.5rem 0.9rem;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  box-shadow: 0 8px 24px rgba(20, 32, 44, 0.16);
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+}
+
+.theme-selector select:hover {
+  background: rgba(35, 48, 62, 0.62);
+}
+
+.theme-selector select:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.42),
+    0 8px 24px rgba(20, 32, 44, 0.16);
+}
+
+.theme-selector svg {
+  position: absolute;
+  top: 50%;
+  right: 0.8rem;
+  width: 0.6rem;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  pointer-events: none;
 }
 
 button,
@@ -40,4 +1425,247 @@ input:focus-visible {
 
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.weather-map {
+  height: 100%;
+  width: 100%;
+  font-family: inherit;
+  background: #dbe5e6;
+}
+
+.weather-map .leaflet-tile-pane {
+  filter: saturate(0.72) contrast(0.92) brightness(1.03);
+}
+
+.weather-map .leaflet-control-attribution {
+  border-radius: 8px 0 0 0;
+  background: rgba(246, 250, 250, 0.82);
+  color: #52616b;
+  font-size: 9px;
+  backdrop-filter: blur(12px);
+}
+
+.weather-map .leaflet-control-attribution a {
+  color: #355f7b;
+}
+
+.weather-map .leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(25, 42, 51, 0.18);
+}
+
+.weather-map .leaflet-control-zoom a {
+  border-color: rgba(77, 96, 108, 0.12);
+  background: rgba(250, 252, 252, 0.9);
+  color: #29404f;
+  backdrop-filter: blur(18px);
+}
+
+.weather-map-pin-wrapper {
+  border: 0;
+  background: transparent;
+}
+
+.weather-map-pin {
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  display: block;
+  height: 23px;
+  width: 23px;
+  transform: rotate(-45deg);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50% 50% 50% 0;
+  background: #405969;
+  box-shadow: 0 5px 12px rgba(20, 34, 42, 0.34);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.weather-map-pin > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 6px;
+  width: 6px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.weather-map-pin--selected {
+  background: #0a84ff;
+  transform: rotate(-45deg) scale(1.16);
+  box-shadow: 0 6px 16px rgba(10, 132, 255, 0.44);
+}
+
+.weather-map-tooltip {
+  max-width: 11rem;
+  margin-top: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(43, 58, 68, 0.88);
+  color: white;
+  box-shadow: 0 6px 18px rgba(28, 42, 50, 0.24);
+  backdrop-filter: blur(16px);
+}
+
+.weather-map-tooltip.leaflet-tooltip-top::before {
+  border-top-color: rgba(43, 58, 68, 0.88);
+}
+
+.weather-map-tooltip--selected {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(10, 105, 210, 0.94);
+  box-shadow: 0 7px 20px rgba(10, 105, 210, 0.34);
+}
+
+.weather-map-tooltip--selected.leaflet-tooltip-top::before {
+  border-top-color: rgba(10, 105, 210, 0.94);
+}
+
+.weather-map-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.6rem;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.weather-map-label__area {
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.weather-map-label__temperature {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.weather-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #dbe5e6;
+  animation: weather-map-appear 180ms ease-out;
+}
+
+.weather-map-overlay__header {
+  position: absolute;
+  z-index: 1000;
+  top: max(1rem, env(safe-area-inset-top));
+  left: max(1rem, env(safe-area-inset-left));
+  right: max(1rem, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.weather-map-overlay__header > * {
+  pointer-events: auto;
+}
+
+.weather-map-overlay__header > div {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  background: rgba(43, 58, 68, 0.82);
+  padding: 0.65rem 0.9rem;
+  color: white;
+  box-shadow: 0 12px 34px rgba(24, 39, 48, 0.22);
+  backdrop-filter: blur(24px);
+}
+
+.weather-map-overlay__eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.weather-map-overlay__title {
+  margin-top: 0.12rem;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.weather-map-overlay__close {
+  display: grid;
+  height: 2.75rem;
+  width: 2.75rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  background: rgba(43, 58, 68, 0.84);
+  color: white;
+  box-shadow: 0 12px 34px rgba(24, 39, 48, 0.22);
+  backdrop-filter: blur(24px);
+}
+
+.weather-map-overlay__close:hover {
+  background: rgba(24, 38, 47, 0.94);
+}
+
+.weather-map--fullscreen .leaflet-control-zoom {
+  margin-top: max(6rem, calc(env(safe-area-inset-top) + 5rem));
+}
+
+@keyframes weather-map-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .weather-map-tooltip {
+    max-width: 8.5rem;
+  }
+
+  .weather-map-label {
+    gap: 0.3rem;
+    padding: 0.27rem 0.42rem 0.27rem 0.5rem;
+    font-size: 10px;
+  }
+
+  .weather-map-label__area {
+    max-width: 4.75rem;
+  }
+
+  .weather-map-overlay__title {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='atmospheric-glass'] body {
+    animation: none;
+  }
+
+  .weather-map-overlay {
+    animation: none;
+  }
+
+  .weather-map-pin {
+    transition: none;
+  }
 }

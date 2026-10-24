@@ -46,16 +46,37 @@ export interface CreateLocationPayload {
   longitude: number;
 }
 
+export interface NearestArea {
+  area: string;
+  latitude: number;
+  longitude: number;
+}
+
+/** Thrown by `locate()`; the message is already user-facing copy. */
+export class GeolocationFailure extends Error {
+  constructor(
+    message: string,
+    readonly reason: 'denied' | 'unavailable' | 'out-of-bounds',
+  ) {
+    super(message);
+    this.name = 'GeolocationFailure';
+  }
+}
+
 export interface StoreValue {
   locations: Location[];
   selectedId: number | null;
   isAdding: boolean;
   isLoading: boolean;
+  isLocating: boolean;
   refreshingId: number | null;
+  deletingId: number | null;
   error: unknown;
   select: (id: number | null) => void;
   setAdding: (isAdding: boolean) => void;
   create: (payload: CreateLocationPayload) => Promise<void>;
+  locate: () => Promise<void>;
+  remove: (id: number) => Promise<void>;
   refresh: (id: number) => Promise<void>;
 }
 

@@ -3,10 +3,11 @@ import { LocationIcon, RefreshIcon } from './icons';
 import { HourlyStrip } from './HourlyStrip';
 import { TenDayForecast } from './TenDayForecast';
 import { TileGrid } from './Tiles';
+import { WeatherMapCard } from './WeatherMap';
 import { formatTemperature, formatTime } from './format';
 
 export function Hero() {
-  const { locations, refresh, refreshingId } = useStore();
+  const { locations, refresh, refreshingId, select } = useStore();
   const selected = useSelectedLocation();
 
   if (!selected) {
@@ -37,7 +38,7 @@ export function Hero() {
   const low = formatTemperature(selected.weather?.forecast_low_c);
 
   return (
-    <main className="flex-1 overflow-y-auto">
+    <main className="min-w-0 flex-1 overflow-y-visible lg:overflow-y-auto">
       <div className="mx-auto flex max-w-5xl flex-col gap-3 p-6 lg:p-8">
         <header className="flex flex-col items-center pt-6 pb-2 text-center">
           {isHome && (
@@ -63,6 +64,7 @@ export function Hero() {
 
         <HourlyStrip periods={selected.weather?.forecast_periods} />
         <TenDayForecast weather={selected.weather} />
+        <WeatherMapCard locations={locations} selectedId={selected.id} onSelect={select} />
         <TileGrid weather={selected.weather} />
 
         <footer className="mt-2 flex flex-col items-center gap-3 pb-8 text-xs text-white/55">

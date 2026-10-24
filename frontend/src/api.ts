@@ -1,6 +1,8 @@
-import type { CreateLocationPayload, Location } from './types';
+import type { CreateLocationPayload, Location, NearestArea } from './types';
 
 const API_BASE = '/api';
+
+// Hidden Code: Fox
 
 interface LocationsResponse {
   locations: Location[];
@@ -27,6 +29,12 @@ export const listLocations = () => request<LocationsResponse>('/locations');
 
 export const createLocation = (payload: CreateLocationPayload) =>
   request<Location>('/locations', { method: 'POST', body: JSON.stringify(payload) });
+
+export const deleteLocation = (id: number) =>
+  request<void>(`/locations/${id}`, { method: 'DELETE' });
+
+export const resolveNearestArea = (latitude: number, longitude: number) =>
+  request<NearestArea>(`/areas/nearest?lat=${latitude}&lon=${longitude}`);
 
 export const refreshLocation = (id: number) =>
   request<Location>(`/locations/${id}/refresh`, { method: 'POST' });

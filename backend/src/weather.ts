@@ -142,6 +142,12 @@ export interface ForecastPeriod {
   forecast: string;
 }
 
+export interface NearestArea {
+  area: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface DailyForecast {
   date: string;
   forecast: string;
@@ -181,14 +187,85 @@ export class SingaporeWeatherClient {
   ) {}
 
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
-    const forecastPayload = await this.fetchLatestForecastPayload().catch(() => null);
-    return forecastPayload
-      ? this.snapshotFromPayload(forecastPayload, latitude, longitude)
-      : this.emptyForecastSnapshot();
+    const [
+      forecast,
+      temperature,
+      humidity,
+      rainfall,
+      windSpeed,
+      windDirection,
+      uv,
+      airQuality,
+      twentyFourHour,
+      fourDay,
+    ] = await Promise.allSettled([
+      this.fetchLatestForecastPayload(),
+      this.fetchNearestReading('air-temperature', latitude, longitude),
+      this.fetchNearestReading('relative-humidity', latitude, longitude),
+      this.fetchNearestReading('rainfall', latitude, longitude),
+      this.fetchNearestReading('wind-speed', latitude, longitude),
+      this.fetchNearestReading('wind-direction', latitude, longitude),
+      this.fetchUvIndex(),
+      this.fetchAirQuality(latitude, longitude),
+      this.fetchTwentyFourHourForecast(latitude, longitude),
+      this.fetchFourDayForecast(),
+    ]);
+
+    const snapshot =
+      forecast.status === 'fulfilled'
+        ? this.snapshotFromPayload(forecast.value, latitude, longitude)
+        : this.emptyForecastSnapshot();
+
+    if (temperature.status === 'fulfilled') snapshot.temperature_c = temperature.value.value;
+    if (humidity.status === 'fulfilled') snapshot.humidity_percent = humidity.value.value;
+    if (rainfall.status === 'fulfilled') snapshot.rainfall_mm = rainfall.value.value;
+    if (windSpeed.status === 'fulfilled') snapshot.wind_speed_knots = windSpeed.value.value;
+    if (windDirection.status === 'fulfilled') {
+      snapshot.wind_direction_degrees = windDirection.value.value;
+    }
+    if (uv.status === 'fulfilled') snapshot.uv_index = uv.value.value;
+    if (airQuality.status === 'fulfilled') {
+      snapshot.psi_twenty_four_hourly = airQuality.value.psi;
+      snapshot.pm25_one_hourly = airQuality.value.pm25;
+      snapshot.air_quality_region = airQuality.value.region;
+    }
+    if (twentyFourHour.status === 'fulfilled') {
+      snapshot.forecast_low_c = twentyFourHour.value.low;
+      snapshot.forecast_high_c = twentyFourHour.value.high;
+      snapshot.forecast_periods = twentyFourHour.value.periods;
+    }
+    if (fourDay.status === 'fulfilled') snapshot.daily_forecast = fourDay.value.days;
+
+    snapshot.observed_at =
+      latestTimestamp([
+        snapshot.observed_at,
+        temperature.status === 'fulfilled' ? temperature.value.timestamp : null,
+        humidity.status === 'fulfilled' ? humidity.value.timestamp : null,
+        rainfall.status === 'fulfilled' ? rainfall.value.timestamp : null,
+        windSpeed.status === 'fulfilled' ? windSpeed.value.timestamp : null,
+        windDirection.status === 'fulfilled' ? windDirection.value.timestamp : null,
+        uv.status === 'fulfilled' ? uv.value.timestamp : null,
+        airQuality.status === 'fulfilled' ? airQuality.value.timestamp : null,
+        twentyFourHour.status === 'fulfilled' ? twentyFourHour.value.timestamp : null,
+        fourDay.status === 'fulfilled' ? fourDay.value.timestamp : null,
+      ]) ?? snapshot.observed_at;
+
+    return snapshot;
   }
 
   async fetchLatestForecastPayload(): Promise<ForecastPayload> {
     return this.fetchJson(`${this.apiBaseUrl()}/v2/real-time/api/two-hr-forecast`);
+  }
+
+  /** Snaps a rough position onto the label point of the forecast area that covers it. */
+  async findNearestArea(latitude: number, longitude: number): Promise<NearestArea | null> {
+    const payload = await this.fetchLatestForecastPayload();
+    if (payload.code !== undefined && payload.code !== 0) {
+      throw new WeatherProviderError(payload.errorMsg ?? 'Weather provider returned an error');
+    }
+
+    const root = payload.data ?? payload;
+    return nearestArea(root.area_metadata ?? [], latitude, longitude);
   }
 
   async fetchNearestReading(
@@ -342,36 +419,44 @@ export class SingaporeWeatherClient {
   }
 
   private async fetchJson<T>(url: string): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs ?? 8000);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs ?? 8000);
 
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': this.options.userAgent ?? 'weather-starter/0.1 (educational project)',
-          ...(this.options.apiKey ? { 'x-api-key': this.options.apiKey } : {}),
-        },
-      });
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': this.options.userAgent ?? 'weather-starter/0.1 (educational project)',
+            ...(this.options.apiKey ? { 'x-api-key': this.options.apiKey } : {}),
+          },
+        });
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new WeatherProviderError('Weather provider rate limit reached (HTTP 429)');
+        if (!response.ok) {
+          if (response.status === 429 && attempt === 0) {
+            await delay(retryAfterMilliseconds(response.headers.get('retry-after')));
+            continue;
+          }
+          if (response.status === 429) {
+            throw new WeatherProviderError('Weather provider rate limit reached (HTTP 429)');
+          }
+          if (response.status === 401 || response.status === 403) {
+            throw new WeatherProviderError('Weather provider rejected request (check API key)');
+          }
+          throw new WeatherProviderError(`Weather provider returned HTTP ${response.status}`);
         }
-        if (response.status === 401 || response.status === 403) {
-          throw new WeatherProviderError('Weather provider rejected request (check API key)');
-        }
-        throw new WeatherProviderError(`Weather provider returned HTTP ${response.status}`);
+
+        return (await response.json()) as T;
+      } catch (error) {
+        if (error instanceof WeatherProviderError) throw error;
+        throw new WeatherProviderError('Unable to reach weather provider');
+      } finally {
+        clearTimeout(timeout);
       }
-
-      return (await response.json()) as T;
-    } catch (error) {
-      if (error instanceof WeatherProviderError) throw error;
-      throw new WeatherProviderError('Unable to reach weather provider');
-    } finally {
-      clearTimeout(timeout);
     }
+
+    throw new WeatherProviderError('Unable to reach weather provider');
   }
 
   snapshotFromPayload(
@@ -473,12 +558,14 @@ export class SingaporeWeatherClient {
   }
 }
 
-function nearestAreaName(
+// Squared degrees, not haversine: at Singapore's latitude a degree of longitude is within
+// 0.6% of a degree of latitude, which cannot change which of the ~47 areas wins.
+function nearestArea(
   areaMetadata: AreaMetadata[],
   latitude: number,
   longitude: number,
-): string | null {
-  let nearest: { name: string; distance: number } | null = null;
+): NearestArea | null {
+  let nearest: { area: NearestArea; distance: number } | null = null;
 
   for (const area of areaMetadata) {
     const lat = Number(area.label_location?.latitude);
@@ -487,11 +574,19 @@ function nearestAreaName(
 
     const distance = (lat - latitude) ** 2 + (lon - longitude) ** 2;
     if (!nearest || distance < nearest.distance) {
-      nearest = { name: area.name, distance };
+      nearest = { area: { area: area.name, latitude: lat, longitude: lon }, distance };
     }
   }
 
-  return nearest?.name ?? null;
+  return nearest?.area ?? null;
+}
+
+function nearestAreaName(
+  areaMetadata: AreaMetadata[],
+  latitude: number,
+  longitude: number,
+): string | null {
+  return nearestArea(areaMetadata, latitude, longitude)?.area ?? null;
 }
 
 function nearestRegionName(
@@ -551,6 +646,18 @@ function numberOrNull(value: number | string | undefined): number | null {
   return Number.isNaN(number) ? null : number;
 }
 
+function retryAfterMilliseconds(value: string | null): number {
+  if (!value) return 10_000;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const date = new Date(value).getTime();
+  return Number.isNaN(date) ? 10_000 : Math.max(0, date - Date.now());
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 function valueForRegion(
   values: Record<string, number | string> | undefined,
   region: string | null,
@@ -558,7 +665,6 @@ function valueForRegion(
   if (!values || !region) return null;
   return numberOrNull(values[region]);
 }
-
 
 function defaultRegions(): RegionMetadata[] {
   return [

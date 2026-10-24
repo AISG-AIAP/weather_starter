@@ -19,7 +19,7 @@ export function Sidebar() {
   }, [locations, query]);
 
   return (
-    <aside className="flex w-[22rem] shrink-0 flex-col gap-3 border-r border-white/5 bg-black/20 p-4 backdrop-blur-2xl">
+    <aside className="flex w-full shrink-0 flex-col gap-3 border-b border-white/5 bg-black/20 p-4 pt-[4.5rem] backdrop-blur-2xl lg:w-[22rem] lg:border-b-0 lg:border-r lg:pt-4">
       <div className="relative">
         <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
         <input

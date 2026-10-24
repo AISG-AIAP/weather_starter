@@ -62,13 +62,25 @@ npm run db:migrate  # Apply Drizzle migrations to backend/weather.db
 
 ## API
 
-| Method | Endpoint                     | Description                    |
-| ------ | ---------------------------- | ------------------------------ |
-| `GET`  | `/health`                    | Health check                   |
-| `GET`  | `/api/locations`             | List all locations             |
-| `POST` | `/api/locations`             | Create a location              |
-| `GET`  | `/api/locations/:id`         | Get a single location          |
-| `POST` | `/api/locations/:id/refresh` | Refresh weather for a location |
+| Method   | Endpoint                     | Description                    |
+| -------- | ---------------------------- | ------------------------------ |
+| `GET`    | `/health`                    | Health check                   |
+| `GET`    | `/api/locations`             | List all locations             |
+| `POST`   | `/api/locations`             | Create a location              |
+| `GET`    | `/api/locations/:id`         | Get a single location          |
+| `DELETE` | `/api/locations/:id`         | Delete a location              |
+| `POST`   | `/api/locations/:id/refresh` | Refresh weather for a location |
+| `GET`    | `/api/areas/nearest`         | Snap a position to an area     |
+
+Snap a rough position onto the nearest forecast area:
+
+```bash
+curl -s "http://weather-starter.localhost:1355/api/areas/nearest?lat=1.3745&lon=103.8412"
+```
+
+Returns `{"area":"Ang Mo Kio","latitude":1.375,"longitude":103.839}` — the area's label point,
+not the position you passed in. Feeding that coordinate to `POST /api/locations` is what lets the
+duplicate check recognise two visits to the same neighbourhood.
 
 Create a location:
 
@@ -169,12 +181,24 @@ Add a `DELETE /api/locations/:id` endpoint and a delete button to each card in `
 
 ### 2. Geolocation + auto-detect
 
-Add a "Use my location" button that detects the user's position, finds the nearest Singapore forecast area, and adds it automatically. Works on local development origins; if you need HTTPS, run Portless with `PORTLESS_HTTPS=1`.
+**Done.** A "Use my location" button in `AddLocationForm.tsx` detects the user's position, snaps it to
+the nearest Singapore forecast area, and adds that area.
 
-| Layer    | What to do                                                                          |
-| -------- | ----------------------------------------------------------------------------------- |
-| Backend  | No changes needed if nearest-area matching already exists                           |
-| Frontend | New button in `AddLocationForm.tsx` using the Geolocation API. Auto-refresh on add. |
+| Layer    | What was built                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| Backend  | `GET /api/areas/nearest` resolves a position to a forecast area's label point. `POST` is unchanged. |
+| Frontend | `locate()` action on the store, standalone button in `AddLocationForm.tsx`.                         |
+
+The button stores the **area's label point**, not the raw GPS fix. Two presses from the same desk
+therefore produce an identical coordinate, so the existing duplicate check fires instead of filling
+the sidebar with near-identical rows — and no precise home coordinate is ever persisted or logged.
+If the area is already saved, the flow selects it without a write.
+
+**Secure-context requirement.** `navigator.geolocation` needs a secure context. The Portless dev
+origin (`http://weather-starter.localhost:1355`) qualifies, because browsers treat any `*.localhost`
+hostname as trustworthy — no HTTPS needed. A bare LAN IP such as `http://192.168.1.20:1355` does
+**not** qualify, so the button silently does nothing when testing from a phone or another machine.
+Run Portless with `PORTLESS_HTTPS=1` if you need that.
 
 ### 3. Singapore area picker
 
@@ -222,11 +246,11 @@ Redesign the app layout and styling. Use polished weather condition cards, meani
 
 Add a map card to the dashboard as part of the themed dashboard experience. Show all saved locations as pins with small weather labels above them. The card can expand into a full-screen map view, but users should continue adding locations through the existing add-location flow rather than creating pins directly from the map.
 
-| Layer    | What to do                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------------- |
-| Backend  | No changes needed                                                                                                |
-| Frontend | Restyle existing components with Tailwind. Add weather icons, condition-based accents, better mobile states, and a map card using Leaflet/React Leaflet or another map library. |
-| NPM packages | `leaflet`, `react-leaflet` or equivalent |
+| Layer        | What to do                                                                                                                                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend      | No changes needed                                                                                                                                                               |
+| Frontend     | Restyle existing components with Tailwind. Add weather icons, condition-based accents, better mobile states, and a map card using Leaflet/React Leaflet or another map library. |
+| NPM packages | `leaflet`, `react-leaflet` or equivalent                                                                                                                                        |
 
 ### 8. Location detail page with charts
 

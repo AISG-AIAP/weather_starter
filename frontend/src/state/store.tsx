@@ -2,19 +2,65 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import {
   listLocations,
   createLocation,
+  deleteLocation,
   refreshLocation,
+  resolveNearestArea,
   logInteraction,
 } from '../api';
+import { GeolocationFailure } from '../types';
 import type { CreateLocationPayload, Location, ProviderProps, StoreValue } from '../types';
 
 const StoreContext = createContext<StoreValue | null>(null);
+
+// Mirrors the backend bounds in routes/locations.ts. This is a UX affordance so the user gets
+// purpose-written copy instead of a raw 422 — the server still validates independently.
+function isWithinSingapore(latitude: number, longitude: number): boolean {
+  return 1.1 <= latitude && latitude <= 1.5 && 103.6 <= longitude && longitude <= 104.1;
+}
+
+function currentPosition(): Promise<GeolocationPosition> {
+  // No secure context (e.g. served over a LAN IP rather than localhost) means no geolocation.
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    return Promise.reject(
+      new GeolocationFailure(
+        'Location is unavailable on this connection. Add coordinates manually below.',
+        'unavailable',
+      ),
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      (error) => {
+        reject(
+          error.code === error.PERMISSION_DENIED
+            ? new GeolocationFailure(
+                'Location access is blocked. Re-enable it for this site in your browser settings, or add coordinates manually below.',
+                'denied',
+              )
+            : new GeolocationFailure(
+                'Could not get your location. Add coordinates manually below.',
+                'unavailable',
+              ),
+        );
+      },
+      // An explicit timeout matters: if the user ignores the permission prompt entirely,
+      // neither callback ever fires and the button would spin forever.
+      // High accuracy is pointless when the fix is snapped to a km-scale forecast area.
+      { timeout: 10_000, maximumAge: 60_000, enableHighAccuracy: false },
+    );
+  });
+}
 
 export function StoreProvider({ children }: ProviderProps) {
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(async (): Promise<Location[]> => {
@@ -71,6 +117,49 @@ export function StoreProvider({ children }: ProviderProps) {
     [load],
   );
 
+  const locate = useCallback(async () => {
+    setIsLocating(true);
+    logInteraction('location_locate_clicked');
+    try {
+      // Outcomes only — a raw fix never goes to the log endpoint.
+      const position = await currentPosition();
+      const { latitude, longitude } = position.coords;
+      if (!isWithinSingapore(latitude, longitude)) {
+        logInteraction('location_locate_failed', { reason: 'out-of-bounds' });
+        throw new GeolocationFailure(
+          'You appear to be outside Singapore — this app only covers Singapore forecast areas.',
+          'out-of-bounds',
+        );
+      }
+
+      // Snap to the forecast area's label point so repeat presses land on an identical
+      // coordinate, which is what makes the existing duplicate check work.
+      const area = await resolveNearestArea(latitude, longitude);
+      logInteraction('location_locate_resolved', { area: area.area });
+
+      const existing = locations.find(
+        (l) => l.latitude === area.latitude && l.longitude === area.longitude,
+      );
+      if (existing) {
+        setSelectedId(existing.id);
+        return;
+      }
+
+      await create({ latitude: area.latitude, longitude: area.longitude });
+    } catch (err) {
+      if (err instanceof GeolocationFailure) {
+        if (err.reason !== 'out-of-bounds') {
+          logInteraction('location_locate_failed', { reason: err.reason });
+        }
+      } else {
+        logInteraction('location_locate_failed', { reason: 'resolve-failed' });
+      }
+      throw err;
+    } finally {
+      setIsLocating(false);
+    }
+  }, [create, locations]);
+
   const refresh = useCallback(
     async (id: number) => {
       setRefreshingId(id);
@@ -93,12 +182,38 @@ export function StoreProvider({ children }: ProviderProps) {
     [load],
   );
 
+  const remove = useCallback(
+    async (id: number) => {
+      setDeletingId(id);
+      setError(null);
+      logInteraction('location_delete_clicked', { locationId: id });
+      try {
+        await deleteLocation(id);
+        const next = await load();
+        setSelectedId((current) => (current === id ? (next[0]?.id ?? null) : current));
+        logInteraction('location_deleted', { locationId: id });
+      } catch (err) {
+        setError(err);
+        logInteraction('location_delete_failed', {
+          locationId: id,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+        throw err;
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [load],
+  );
+
   const value: StoreValue = {
     locations,
     selectedId: effectiveSelectedId,
     isAdding,
     isLoading,
+    isLocating,
     refreshingId,
+    deletingId,
     error,
     select: setSelectedId,
     setAdding: (nextIsAdding) => {
@@ -106,6 +221,8 @@ export function StoreProvider({ children }: ProviderProps) {
       if (nextIsAdding) logInteraction('location_form_opened');
     },
     create,
+    locate,
+    remove,
     refresh,
   };
 
