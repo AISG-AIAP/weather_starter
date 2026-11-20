@@ -28,6 +28,9 @@ export const listLocations = () => request<LocationsResponse>('/locations');
 export const createLocation = (payload: CreateLocationPayload) =>
   request<Location>('/locations', { method: 'POST', body: JSON.stringify(payload) });
 
+export const deleteLocation = (id: number) =>
+  request<null>(`/locations/${id}`, { method: 'DELETE' });
+
 export const refreshLocation = (id: number) =>
   request<Location>(`/locations/${id}/refresh`, { method: 'POST' });
 

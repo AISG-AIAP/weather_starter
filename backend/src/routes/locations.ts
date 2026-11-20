@@ -2,6 +2,7 @@ import type { Router } from 'express';
 import { Router as createRouter } from 'express';
 import {
   createLocation,
+  deleteLocation,
   getLocation,
   listLocations,
   updateWeather,
@@ -81,6 +82,19 @@ export function createLocationsRouter(options: LocationsRouterOptions = {}): Rou
         return;
       }
       response.json(location);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.delete('/locations/:locationId', async (request, response, next) => {
+    try {
+      const deleted = await deleteLocation(Number(request.params.locationId));
+      if (!deleted) {
+        response.status(404).json({ detail: 'Location not found' });
+        return;
+      }
+      response.status(204).end();
     } catch (error) {
       next(error);
     }
