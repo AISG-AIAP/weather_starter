@@ -183,11 +183,18 @@ export class SingaporeWeatherClient {
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
     // Errors propagate as WeatherProviderError so callers keep the stored
     // values instead of overwriting them with placeholders.
-    const [forecastPayload, temperature] = await Promise.all([
+    const [forecastPayload, temperature, humidity] = await Promise.all([
       this.fetchLatestForecastPayload(),
       this.fetchNearestReading('air-temperature', latitude, longitude),
+      this.fetchNearestReading('relative-humidity', latitude, longitude),
     ]);
-    return this.snapshotFromPayload(forecastPayload, latitude, longitude, temperature.value);
+    return this.snapshotFromPayload(
+      forecastPayload,
+      latitude,
+      longitude,
+      temperature.value,
+      humidity.value,
+    );
   }
 
   async fetchLatestForecastPayload(): Promise<ForecastPayload> {
@@ -382,6 +389,7 @@ export class SingaporeWeatherClient {
     latitude: number,
     longitude: number,
     temperatureC: number | null = null,
+    humidityPercent: number | null = null,
   ): WeatherSnapshot {
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(payload.errorMsg ?? 'Weather provider returned an error');
@@ -415,7 +423,7 @@ export class SingaporeWeatherClient {
         area: nearestArea,
         valid_period_text: latestItem.valid_period?.text ?? null,
         temperature_c: temperatureC,
-        humidity_percent: null,
+        humidity_percent: humidityPercent,
         rainfall_mm: null,
         wind_speed_knots: null,
         wind_direction_degrees: null,
@@ -438,7 +446,7 @@ export class SingaporeWeatherClient {
       area: fallback.area ?? null,
       valid_period_text: latestItem.valid_period?.text ?? null,
       temperature_c: temperatureC,
-      humidity_percent: null,
+      humidity_percent: humidityPercent,
       rainfall_mm: null,
       wind_speed_knots: null,
       wind_direction_degrees: null,

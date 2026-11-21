@@ -24,6 +24,21 @@ const forecastPayload = {
   },
 };
 
+const humidityPayload = {
+  code: 0,
+  data: {
+    stations: [
+      { id: 'S109', name: 'Ang Mo Kio Avenue 5', location: { latitude: 1.3793, longitude: 103.85 } },
+    ],
+    readings: [
+      {
+        timestamp: '2026-11-21T22:43:00+08:00',
+        data: [{ stationId: 'S109', value: 80 }],
+      },
+    ],
+  },
+};
+
 const airTemperaturePayload = {
   code: 0,
   data: {
@@ -65,13 +80,16 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
 
   const client = () => new SingaporeWeatherClient({ baseUrl, timeoutMs: 2000 });
 
-  it('reads the condition for the nearest area and the nearest-station temperature', async () => {
+  it('reads the condition, nearest-station temperature, and humidity', async () => {
     respond = (path) => {
       if (path === '/v2/real-time/api/two-hr-forecast') {
         return { status: 200, body: forecastPayload };
       }
       if (path === '/v2/real-time/api/air-temperature') {
         return { status: 200, body: airTemperaturePayload };
+      }
+      if (path === '/v2/real-time/api/relative-humidity') {
+        return { status: 200, body: humidityPayload };
       }
       return { status: 404, body: {} };
     };
@@ -85,6 +103,7 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       valid_period_text: '10.30 pm to 12.30 am',
       source: 'api-open.data.gov.sg',
       temperature_c: 27.8,
+      humidity_percent: 80,
     });
   });
 
