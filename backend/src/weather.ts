@@ -181,10 +181,13 @@ export class SingaporeWeatherClient {
   ) {}
 
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
-    const forecastPayload = await this.fetchLatestForecastPayload().catch(() => null);
-    return forecastPayload
-      ? this.snapshotFromPayload(forecastPayload, latitude, longitude)
-      : this.emptyForecastSnapshot();
+    // Errors propagate as WeatherProviderError so callers keep the stored
+    // values instead of overwriting them with placeholders.
+    const [forecastPayload, temperature] = await Promise.all([
+      this.fetchLatestForecastPayload(),
+      this.fetchNearestReading('air-temperature', latitude, longitude),
+    ]);
+    return this.snapshotFromPayload(forecastPayload, latitude, longitude, temperature.value);
   }
 
   async fetchLatestForecastPayload(): Promise<ForecastPayload> {
@@ -378,6 +381,7 @@ export class SingaporeWeatherClient {
     payload: ForecastPayload,
     latitude: number,
     longitude: number,
+    temperatureC: number | null = null,
   ): WeatherSnapshot {
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(payload.errorMsg ?? 'Weather provider returned an error');
@@ -410,7 +414,7 @@ export class SingaporeWeatherClient {
         source: 'api-open.data.gov.sg',
         area: nearestArea,
         valid_period_text: latestItem.valid_period?.text ?? null,
-        temperature_c: null,
+        temperature_c: temperatureC,
         humidity_percent: null,
         rainfall_mm: null,
         wind_speed_knots: null,
@@ -433,7 +437,7 @@ export class SingaporeWeatherClient {
       source: 'api-open.data.gov.sg',
       area: fallback.area ?? null,
       valid_period_text: latestItem.valid_period?.text ?? null,
-      temperature_c: null,
+      temperature_c: temperatureC,
       humidity_percent: null,
       rainfall_mm: null,
       wind_speed_knots: null,
@@ -449,28 +453,6 @@ export class SingaporeWeatherClient {
     };
   }
 
-  private emptyForecastSnapshot(): WeatherSnapshot {
-    return {
-      condition: 'Unavailable',
-      observed_at: '',
-      source: 'api-open.data.gov.sg',
-      area: null,
-      valid_period_text: null,
-      temperature_c: null,
-      humidity_percent: null,
-      rainfall_mm: null,
-      wind_speed_knots: null,
-      wind_direction_degrees: null,
-      forecast_low_c: null,
-      forecast_high_c: null,
-      uv_index: null,
-      psi_twenty_four_hourly: null,
-      pm25_one_hourly: null,
-      air_quality_region: null,
-      forecast_periods: [],
-      daily_forecast: [],
-    };
-  }
 }
 
 function nearestAreaName(
