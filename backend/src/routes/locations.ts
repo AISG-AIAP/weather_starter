@@ -7,11 +7,20 @@ import {
   listLocations,
   updateWeather,
 } from '../db.js';
-import { SingaporeWeatherClient, WeatherProviderError, type WeatherSnapshot } from '../weather.js';
+import {
+  SingaporeWeatherClient,
+  WeatherProviderError,
+  type PreviousReadings,
+  type WeatherSnapshot,
+} from '../weather.js';
 import { logger } from '../logger.js';
 
 export interface WeatherClient {
-  getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot>;
+  getCurrentWeather(
+    latitude: number,
+    longitude: number,
+    previous?: PreviousReadings | null,
+  ): Promise<WeatherSnapshot>;
 }
 
 interface LocationsRouterOptions {
@@ -109,7 +118,11 @@ export function createLocationsRouter(options: LocationsRouterOptions = {}): Rou
         return;
       }
 
-      const snapshot = await weatherClient.getCurrentWeather(location.latitude, location.longitude);
+      const snapshot = await weatherClient.getCurrentWeather(
+        location.latitude,
+        location.longitude,
+        location.weather,
+      );
       const updated = await updateWeather(locationId, snapshot);
       response.json(updated);
     } catch (error) {

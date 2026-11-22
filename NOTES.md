@@ -14,3 +14,16 @@ The first AI example covered in this module: use precise engineering vocabulary 
 ## Follow-up: VS Code Integration
 
 Install the Claude Code extension and sign in.
+# Module 2: Prompting Techniques
+
+## N-shot Prompting
+
+Give the agent *n* examples of the task, so it learns the expected pattern before doing the real work.
+
+## Iterative Prompting
+
+Ask the agent to tackle a task one layer at a time, rather than all at once.
+
+## Plan Mode
+
+Use plan mode to prototype an approach first, and review it before letting the agent work on the task.

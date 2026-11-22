@@ -106,7 +106,13 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  const client = () => new SingaporeWeatherClient({ baseUrl, timeoutMs: 2000 });
+  // A large call budget keeps these tests off the real rate-limit window.
+  const client = () =>
+    new SingaporeWeatherClient({
+      baseUrl,
+      timeoutMs: 2000,
+      realtimeCallsPerWindow: 1000,
+    });
 
   it('reads the condition, temperature, humidity, rainfall, wind speed, and UV', async () => {
     respond = (path) => {
@@ -145,6 +151,129 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       wind_speed_knots: 6,
       uv_index: 3,
     });
+  });
+
+  it('serves repeat refreshes within the TTL from cache without upstream calls', async () => {
+    const hits: string[] = [];
+    respond = (path) => {
+      hits.push(path);
+      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      return { status: 200, body: airTemperaturePayload };
+    };
+    let clock = 1_000_000;
+    const cached = new SingaporeWeatherClient({
+      baseUrl,
+      timeoutMs: 2000,
+      realtimeCallsPerWindow: 1000,
+      now: () => clock,
+    });
+
+    await cached.getCurrentWeather(1.35, 103.85);
+    const firstCount = hits.length;
+    clock += 30_000; // inside the 5-minute forecast TTL and the 60 s station TTL
+    await cached.getCurrentWeather(1.35, 103.85);
+
+    expect(hits.length).toBe(firstCount);
+  });
+
+  it('shares one upstream request between concurrent refreshes', async () => {
+    const hits: string[] = [];
+    respond = (path) => {
+      hits.push(path);
+      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      return { status: 200, body: airTemperaturePayload };
+    };
+    const shared = new SingaporeWeatherClient({
+      baseUrl,
+      timeoutMs: 2000,
+      realtimeCallsPerWindow: 1000,
+      now: () => 1_000_000,
+    });
+
+    await Promise.all([
+      shared.getCurrentWeather(1.35, 103.85),
+      shared.getCurrentWeather(1.3, 103.8),
+    ]);
+
+    const forecastCalls = hits.filter((path) => path === '/v2/real-time/api/two-hr-forecast');
+    expect(forecastCalls).toHaveLength(1);
+  });
+
+  it('falls back to a stale cached payload when the provider later fails', async () => {
+    let failing = false;
+    respond = (path) => {
+      if (failing) return { status: 500, body: {} };
+      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      return { status: 200, body: airTemperaturePayload };
+    };
+    let clock = 1_000_000;
+    const stale = new SingaporeWeatherClient({
+      baseUrl,
+      timeoutMs: 2000,
+      realtimeCallsPerWindow: 1000,
+      now: () => clock,
+    });
+
+    const first = await stale.getCurrentWeather(1.35, 103.85);
+    failing = true;
+    clock += 6 * 60_000; // past every TTL
+    const second = await stale.getCurrentWeather(1.35, 103.85);
+
+    expect(second.condition).toBe(first.condition);
+    expect(second.temperature_c).toBe(first.temperature_c);
+  });
+
+  it('keeps the stored value for a field whose endpoint fails', async () => {
+    respond = (path) => {
+      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/air-temperature') return { status: 200, body: airTemperaturePayload };
+      return { status: 500, body: {} };
+    };
+
+    const snapshot = await client().getCurrentWeather(1.35, 103.85, {
+      humidity_percent: 70,
+      uv_index: 5,
+      psi_twenty_four_hourly: 42,
+    });
+
+    expect(snapshot).toMatchObject({
+      temperature_c: 27.8,
+      humidity_percent: 70,
+      uv_index: 5,
+      psi_twenty_four_hourly: 42,
+    });
+  });
+
+  it('limits realtime calls to the window cap and waits instead of sending a 7th', async () => {
+    const hits: number[] = [];
+    respond = (path) => {
+      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      return { status: 200, body: airTemperaturePayload };
+    };
+    const limited = new SingaporeWeatherClient({
+      baseUrl,
+      timeoutMs: 2000,
+      realtimeCallsPerWindow: 3,
+      realtimeWindowMs: 200,
+    });
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      if (String(input).includes(baseUrl)) hits.push(Date.now());
+      return realFetch(input, init);
+    }) as typeof fetch;
+
+    try {
+      await limited.getCurrentWeather(1.35, 103.85);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+
+    // Any 200 ms window must hold at most 3 realtime calls.
+    for (let i = 0; i < hits.length; i++) {
+      const inWindow = hits.filter((t) => t >= hits[i] && t < hits[i] + 200).length;
+      expect(inWindow).toBeLessThanOrEqual(3);
+    }
+    expect(hits.length).toBeGreaterThan(3);
   });
 
   it('throws WeatherProviderError when the provider returns HTTP 500', async () => {

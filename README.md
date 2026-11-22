@@ -149,7 +149,7 @@ All endpoints are on `https://api-open.data.gov.sg`. No API key is required for 
 
 ### Rate limits and refresh
 
-The realtime API (`/v2/real-time/api/*`) limits calls per 10-second window:
+The realtime API (`/v2/real-time/api/*`) allows a fixed number of calls per 10-second window:
 
 | Tier                 | Calls per 10 s |
 | -------------------- | -------------- |
@@ -159,14 +159,16 @@ The realtime API (`/v2/real-time/api/*`) limits calls per 10-second window:
 
 The limit is shared across all realtime endpoints. A `429` response means the window is full. The 4-day forecast is on a different host (`api.data.gov.sg`) and is not counted.
 
-How this affects a refresh (`getCurrentWeather` in `backend/src/weather.ts`):
+How the app stays within the limit (`backend/src/weather.ts`):
 
-- **One refresh makes 6 realtime calls:** the two-hour forecast (condition), air temperature, relative humidity, rainfall, wind speed, and UV index. That uses the whole no-key budget for one window.
-- **Refreshes must not overlap.** Two refreshes within 10 seconds can exceed the cap and return `429`. The API then responds with `502` and the stored values are kept.
-- **Not yet fetched:** PSI/PM2.5 (air quality) and the 24-hour forecast. Each adds realtime calls, so they go over the cap without an API key.
-- **Wind direction is not fetched.** It was removed to stay within the cap, so the Wind tile shows no direction.
+- **Shared payload cache.** Realtime payloads are island-wide, not per-location, so one fetch serves every saved location. Each endpoint has its own time-to-live: station readings 60 s, two-hour forecast 5 min, UV/PSI/PM2.5 10 min, 24-hour forecast 30 min, 4-day forecast 60 min. Repeat refreshes inside the TTL make no upstream calls.
+- **Single-flight.** Concurrent refreshes for the same endpoint share one request.
+- **Sliding-window limiter.** Every realtime call waits for a free slot, so the app never sends more than 6 calls in 10 seconds (the limiter holds for 10.5 s to allow for the provider's window boundary). A cold refresh of all fields therefore takes about 11 seconds.
+- **Stale-if-error.** If an endpoint fails and an older payload is cached, the older payload is used.
+- **Partial results.** A failing endpoint keeps that field's stored value instead of blanking the card. Only a failure of the two-hour forecast (the condition) returns `502`.
+- **Wind direction is not fetched.** The Wind tile shows no direction.
 
-To fetch every card field, either set `WEATHER_API_KEY` (dev tier covers 12 calls per window), or spread the calls across windows, for example by alternating which group of readings each refresh fetches.
+To raise the limit, set `WEATHER_API_KEY`. The client already sends it as `x-api-key`. The limiter still uses the no-key cap of 6 until the code is changed to read the tier from the key.
 
 Optional API key:
 
