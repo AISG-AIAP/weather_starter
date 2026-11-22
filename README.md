@@ -147,6 +147,27 @@ All endpoints are on `https://api-open.data.gov.sg`. No API key is required for 
 | `GET /v1/environment/24-hour-weather-forecast` | [Weather Forecast](https://data.gov.sg/collections/weather-forecast/view)                   | 24-hour forecast broken into time periods. Different response shape from the 2-hour endpoint. |
 | `GET /v1/environment/4-day-weather-forecast`   | [Weather Forecast](https://data.gov.sg/collections/weather-forecast/view)                   | 4-day outlook with temperature ranges and forecast text.                                      |
 
+### Rate limits and refresh
+
+The realtime API (`/v2/real-time/api/*`) limits calls per 10-second window:
+
+| Tier                 | Calls per 10 s |
+| -------------------- | -------------- |
+| No API key (default) | 6              |
+| Dev API key          | 12             |
+| Prod API key         | 30             |
+
+The limit is shared across all realtime endpoints. A `429` response means the window is full. The 4-day forecast is on a different host (`api.data.gov.sg`) and is not counted.
+
+How this affects a refresh (`getCurrentWeather` in `backend/src/weather.ts`):
+
+- **One refresh makes 6 realtime calls:** the two-hour forecast (condition), air temperature, relative humidity, rainfall, wind speed, and UV index. That uses the whole no-key budget for one window.
+- **Refreshes must not overlap.** Two refreshes within 10 seconds can exceed the cap and return `429`. The API then responds with `502` and the stored values are kept.
+- **Not yet fetched:** PSI/PM2.5 (air quality) and the 24-hour forecast. Each adds realtime calls, so they go over the cap without an API key.
+- **Wind direction is not fetched.** It was removed to stay within the cap, so the Wind tile shows no direction.
+
+To fetch every card field, either set `WEATHER_API_KEY` (dev tier covers 12 calls per window), or spread the calls across windows, for example by alternating which group of readings each refresh fetches.
+
 Optional API key:
 
 ```bash

@@ -183,10 +183,13 @@ export class SingaporeWeatherClient {
   async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
     // Errors propagate as WeatherProviderError so callers keep the stored
     // values instead of overwriting them with placeholders.
-    const [forecastPayload, temperature, humidity] = await Promise.all([
+    const [forecastPayload, temperature, humidity, rainfall, windSpeed, uv] = await Promise.all([
       this.fetchLatestForecastPayload(),
       this.fetchNearestReading('air-temperature', latitude, longitude),
       this.fetchNearestReading('relative-humidity', latitude, longitude),
+      this.fetchNearestReading('rainfall', latitude, longitude),
+      this.fetchNearestReading('wind-speed', latitude, longitude),
+      this.fetchUvIndex(),
     ]);
     return this.snapshotFromPayload(
       forecastPayload,
@@ -194,6 +197,9 @@ export class SingaporeWeatherClient {
       longitude,
       temperature.value,
       humidity.value,
+      rainfall.value,
+      windSpeed.value,
+      uv.value,
     );
   }
 
@@ -202,12 +208,7 @@ export class SingaporeWeatherClient {
   }
 
   async fetchNearestReading(
-    endpoint:
-      | 'air-temperature'
-      | 'relative-humidity'
-      | 'rainfall'
-      | 'wind-speed'
-      | 'wind-direction',
+    endpoint: 'air-temperature' | 'relative-humidity' | 'rainfall' | 'wind-speed',
     latitude: number,
     longitude: number,
   ): Promise<{ value: number | null; timestamp: string | null }> {
@@ -390,6 +391,9 @@ export class SingaporeWeatherClient {
     longitude: number,
     temperatureC: number | null = null,
     humidityPercent: number | null = null,
+    rainfallMm: number | null = null,
+    windSpeedKnots: number | null = null,
+    uvIndex: number | null = null,
   ): WeatherSnapshot {
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(payload.errorMsg ?? 'Weather provider returned an error');
@@ -424,12 +428,12 @@ export class SingaporeWeatherClient {
         valid_period_text: latestItem.valid_period?.text ?? null,
         temperature_c: temperatureC,
         humidity_percent: humidityPercent,
-        rainfall_mm: null,
-        wind_speed_knots: null,
+        rainfall_mm: rainfallMm,
+        wind_speed_knots: windSpeedKnots,
         wind_direction_degrees: null,
         forecast_low_c: null,
         forecast_high_c: null,
-        uv_index: null,
+        uv_index: uvIndex,
         psi_twenty_four_hourly: null,
         pm25_one_hourly: null,
         air_quality_region: null,
@@ -447,12 +451,12 @@ export class SingaporeWeatherClient {
       valid_period_text: latestItem.valid_period?.text ?? null,
       temperature_c: temperatureC,
       humidity_percent: humidityPercent,
-      rainfall_mm: null,
-      wind_speed_knots: null,
+      rainfall_mm: rainfallMm,
+      wind_speed_knots: windSpeedKnots,
       wind_direction_degrees: null,
       forecast_low_c: null,
       forecast_high_c: null,
-      uv_index: null,
+      uv_index: uvIndex,
       psi_twenty_four_hourly: null,
       pm25_one_hourly: null,
       air_quality_region: null,
