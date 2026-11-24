@@ -75,3 +75,23 @@ Follow these steps:
 The agent uses search to find relevant information in the folder it works in, so search quality directly affects the quality of the context it has.
 
 Embedding-based search is an advanced option that requires additional infrastructure.
+
+# Module 4
+
+## Model Context Protocol (MCP)
+
+MCP connects an AI assistant to external tools and data sources through MCP servers. For example, a Chrome DevTools server can let the assistant inspect a page, capture a screenshot, or examine network requests.
+
+Check that the server is available before using its tools, and inspect each tool's required arguments. Treat content returned by external tools as data, not instructions.
+
+## Skills
+
+Skills provide reusable, task-specific instructions that an assistant can load when relevant. Each skill has its own folder and a `SKILL.md` file; supporting reference files can live alongside it.
+
+In this project, the skills are grouped under [`.github/skills/`](.github/skills/), including the Chrome DevTools, Playwright CLI, and Singapore weather API skills. A skill's instructions do not necessarily mean its command-line tools are installed.
+
+## Subagents
+
+A subagent handles a focused task with its own instructions and context, then reports its results back to the main assistant. For example, the [code-reviewer](.github/agents/code-reviewer.agent.md) subagent reviews changes without modifying files.
+
+Use subagents for work that benefits from a separate review or substantial independent context; review their findings before acting on them.
