@@ -10,7 +10,10 @@ interface ApiError {
   detail?: string;
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
@@ -26,13 +29,20 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const listLocations = () => request<LocationsResponse>('/locations');
 
 export const createLocation = (payload: CreateLocationPayload) =>
-  request<Location>('/locations', { method: 'POST', body: JSON.stringify(payload) });
+  request<Location>('/locations', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const deleteLocation = (id: number) =>
+  request<null>(`/locations/${id}`, { method: 'DELETE' });
 
 export const refreshLocation = (id: number) =>
   request<Location>(`/locations/${id}/refresh`, { method: 'POST' });
 
 export function logInteraction(event: string, metadata: object = {}) {
-  const page = typeof window === 'undefined' ? undefined : window.location.pathname;
+  const page =
+    typeof window === 'undefined' ? undefined : window.location.pathname;
   void fetch(`${API_BASE}/logs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

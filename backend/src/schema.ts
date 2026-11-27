@@ -1,4 +1,10 @@
-import { integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 
 export interface WeatherSnapshot {
   condition: string | null;
@@ -60,6 +66,9 @@ export const locations = sqliteTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex('locations_latitude_longitude_unique').on(table.latitude, table.longitude),
+    uniqueIndex('locations_latitude_longitude_unique').on(
+      table.latitude,
+      table.longitude,
+    ),
   ],
 );

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sqlite": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "mcp-sqlite",
+        "backend/weather.db"
+      ],
+      "env": {}
+    }
+  }
+}

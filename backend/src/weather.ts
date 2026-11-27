@@ -1,5 +1,28 @@
 export class WeatherProviderError extends Error {}
 
+/**
+ * Stored readings a refresh can fall back to when an endpoint fails. Every field may be
+ * missing or null, matching how rows are stored before the first refresh.
+ */
+export type PreviousReadings = {
+  [K in keyof WeatherSnapshot]?: WeatherSnapshot[K] | null;
+};
+
+interface SnapshotReadings {
+  temperatureC?: number | null;
+  humidityPercent?: number | null;
+  rainfallMm?: number | null;
+  windSpeedKnots?: number | null;
+  uvIndex?: number | null;
+  psiTwentyFourHourly?: number | null;
+  pm25OneHourly?: number | null;
+  airQualityRegion?: string | null;
+  forecastLowC?: number | null;
+  forecastHighC?: number | null;
+  forecastPeriods?: ForecastPeriod[];
+  dailyForecast?: DailyForecast[];
+}
+
 interface ForecastPayload {
   code?: number;
   errorMsg?: string;
@@ -170,25 +193,125 @@ export interface WeatherSnapshot {
   daily_forecast: DailyForecast[];
 }
 
-export class SingaporeWeatherClient {
-  constructor(
-    private readonly options: {
-      baseUrl?: string;
-      apiKey?: string;
-      timeoutMs?: number;
-      userAgent?: string;
-    } = {},
-  ) {}
+// data.gov.sg realtime API cap without an API key. Dev/prod keys raise this (12 / 30).
+const REALTIME_CALLS_PER_WINDOW = 6;
+// Held slightly longer than the 10 s window: the provider measured a call at exactly 10.00 s
+// as still inside the window and returned 429.
+const REALTIME_WINDOW_MS = 10_500;
 
-  async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherSnapshot> {
-    const forecastPayload = await this.fetchLatestForecastPayload().catch(() => null);
-    return forecastPayload
-      ? this.snapshotFromPayload(forecastPayload, latitude, longitude)
-      : this.emptyForecastSnapshot();
+// How long a payload is reused before re-fetching it. Payloads are island-wide, so one fetch
+// serves every saved location.
+const CACHE_TTL_MS = {
+  station: 60_000,
+  twoHourForecast: 5 * 60_000,
+  uvPsiPm25: 10 * 60_000,
+  twentyFourHourForecast: 30 * 60_000,
+  fourDayForecast: 60 * 60_000,
+} as const;
+
+type CacheKind = keyof typeof CACHE_TTL_MS;
+
+interface CacheEntry {
+  payload: unknown;
+  fetchedAt: number;
+}
+
+export interface WeatherClientOptions {
+  baseUrl?: string;
+  apiKey?: string;
+  timeoutMs?: number;
+  userAgent?: string;
+  realtimeCallsPerWindow?: number;
+  realtimeWindowMs?: number;
+  now?: () => number;
+}
+
+export class SingaporeWeatherClient {
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly inFlight = new Map<string, Promise<unknown>>();
+  private readonly callTimes: number[] = [];
+
+  constructor(private readonly options: WeatherClientOptions = {}) {}
+
+  private now(): number {
+    return this.options.now ? this.options.now() : Date.now();
+  }
+
+  /**
+   * Builds a snapshot for a point. The two-hour forecast (condition) is required; every other
+   * field is best-effort. A field whose endpoint fails keeps its value from `previous`
+   * (the stored weather) instead of blanking the card.
+   */
+  async getCurrentWeather(
+    latitude: number,
+    longitude: number,
+    previous?: PreviousReadings | null,
+  ): Promise<WeatherSnapshot> {
+    const forecastPayload = await this.fetchLatestForecastPayload();
+
+    // Each endpoint is independent: a failure leaves that field to the stored value.
+    const [
+      temperature,
+      humidity,
+      rainfall,
+      windSpeed,
+      uv,
+      airQuality,
+      twentyFour,
+      fourDay,
+    ] = await Promise.all([
+      this.settle(
+        this.fetchNearestReading('air-temperature', latitude, longitude),
+      ),
+      this.settle(
+        this.fetchNearestReading('relative-humidity', latitude, longitude),
+      ),
+      this.settle(this.fetchNearestReading('rainfall', latitude, longitude)),
+      this.settle(this.fetchNearestReading('wind-speed', latitude, longitude)),
+      this.settle(this.fetchUvIndex()),
+      this.settle(this.fetchAirQuality(latitude, longitude)),
+      this.settle(this.fetchTwentyFourHourForecast(latitude, longitude)),
+      this.settle(this.fetchFourDayForecast()),
+    ]);
+
+    const pick = <T>(
+      fresh: T | null | undefined,
+      stored: T | null | undefined,
+    ) => fresh ?? stored ?? null;
+
+    return this.snapshotFromPayload(forecastPayload, latitude, longitude, {
+      temperatureC: pick(temperature?.value, previous?.temperature_c),
+      humidityPercent: pick(humidity?.value, previous?.humidity_percent),
+      rainfallMm: pick(rainfall?.value, previous?.rainfall_mm),
+      windSpeedKnots: pick(windSpeed?.value, previous?.wind_speed_knots),
+      uvIndex: pick(uv?.value, previous?.uv_index),
+      psiTwentyFourHourly: pick(
+        airQuality?.psi,
+        previous?.psi_twenty_four_hourly,
+      ),
+      pm25OneHourly: pick(airQuality?.pm25, previous?.pm25_one_hourly),
+      airQualityRegion: pick(airQuality?.region, previous?.air_quality_region),
+      forecastLowC: pick(twentyFour?.low, previous?.forecast_low_c),
+      forecastHighC: pick(twentyFour?.high, previous?.forecast_high_c),
+      forecastPeriods: twentyFour?.periods ?? previous?.forecast_periods ?? [],
+      dailyForecast: fourDay?.days ?? previous?.daily_forecast ?? [],
+    });
+  }
+
+  /** Resolves a field's fetch to its value, or null if that endpoint failed. */
+  private async settle<T>(request: Promise<T>): Promise<T | null> {
+    try {
+      return await request;
+    } catch {
+      return null;
+    }
   }
 
   async fetchLatestForecastPayload(): Promise<ForecastPayload> {
-    return this.fetchJson(`${this.apiBaseUrl()}/v2/real-time/api/two-hr-forecast`);
+    return this.fetchJson(
+      `${this.apiBaseUrl()}/v2/real-time/api/two-hr-forecast`,
+      'twoHourForecast',
+    );
   }
 
   async fetchNearestReading(
@@ -196,15 +319,15 @@ export class SingaporeWeatherClient {
       | 'air-temperature'
       | 'relative-humidity'
       | 'rainfall'
-      | 'wind-speed'
-      | 'wind-direction',
+      | 'wind-speed',
     latitude: number,
     longitude: number,
   ): Promise<{ value: number | null; timestamp: string | null }> {
     const payload = await this.fetchReadingPayload(endpoint);
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(
-        payload.errorMsg ?? `Weather provider returned an error for ${endpoint}`,
+        payload.errorMsg ??
+          `Weather provider returned an error for ${endpoint}`,
       );
     }
 
@@ -218,9 +341,17 @@ export class SingaporeWeatherClient {
     const valueByStation = new Map(
       values
         .map((entry) => [entry.stationId, Number(entry.value)] as const)
-        .filter((entry): entry is [string, number] => Boolean(entry[0]) && !Number.isNaN(entry[1])),
+        .filter(
+          (entry): entry is [string, number] =>
+            Boolean(entry[0]) && !Number.isNaN(entry[1]),
+        ),
     );
-    const station = nearestStation(stations, latitude, longitude, valueByStation);
+    const station = nearestStation(
+      stations,
+      latitude,
+      longitude,
+      valueByStation,
+    );
     return {
       value: station ? (valueByStation.get(station.id) ?? null) : null,
       timestamp: latestReading?.timestamp ?? null,
@@ -228,11 +359,20 @@ export class SingaporeWeatherClient {
   }
 
   async fetchReadingPayload(endpoint: string): Promise<ReadingPayload> {
-    return this.fetchJson(`${this.apiBaseUrl()}/v2/real-time/api/${endpoint}`);
+    return this.fetchJson(
+      `${this.apiBaseUrl()}/v2/real-time/api/${endpoint}`,
+      'station',
+    );
   }
 
-  async fetchUvIndex(): Promise<{ value: number | null; timestamp: string | null }> {
-    const payload = await this.fetchJson<UvPayload>(`${this.apiBaseUrl()}/v2/real-time/api/uv`);
+  async fetchUvIndex(): Promise<{
+    value: number | null;
+    timestamp: string | null;
+  }> {
+    const payload = await this.fetchJson<UvPayload>(
+      `${this.apiBaseUrl()}/v2/real-time/api/uv`,
+      'uvPsiPm25',
+    );
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(
         payload.errorMsg ?? 'Weather provider returned an error for uv',
@@ -243,7 +383,8 @@ export class SingaporeWeatherClient {
     const latest = record?.index?.[0];
     return {
       value: numberOrNull(latest?.value),
-      timestamp: record?.updatedTimestamp ?? latest?.hour ?? record?.timestamp ?? null,
+      timestamp:
+        record?.updatedTimestamp ?? latest?.hour ?? record?.timestamp ?? null,
     };
   }
 
@@ -257,8 +398,14 @@ export class SingaporeWeatherClient {
     timestamp: string | null;
   }> {
     const [psiPayload, pm25Payload] = await Promise.all([
-      this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/psi`),
-      this.fetchJson<PsiPayload>(`${this.apiBaseUrl()}/v2/real-time/api/pm25`),
+      this.fetchJson<PsiPayload>(
+        `${this.apiBaseUrl()}/v2/real-time/api/psi`,
+        'uvPsiPm25',
+      ),
+      this.fetchJson<PsiPayload>(
+        `${this.apiBaseUrl()}/v2/real-time/api/pm25`,
+        'uvPsiPm25',
+      ),
     ]);
     for (const payload of [psiPayload, pm25Payload]) {
       if (payload.code !== undefined && payload.code !== 0) {
@@ -268,7 +415,11 @@ export class SingaporeWeatherClient {
       }
     }
 
-    const region = nearestRegionName(psiPayload.data?.regionMetadata ?? [], latitude, longitude);
+    const region = nearestRegionName(
+      psiPayload.data?.regionMetadata ?? [],
+      latitude,
+      longitude,
+    );
     const psiItem = psiPayload.data?.items?.[0];
     const pm25Item = pm25Payload.data?.items?.[0];
     return {
@@ -293,31 +444,41 @@ export class SingaporeWeatherClient {
   }> {
     const payload = await this.fetchJson<TwentyFourHourPayload>(
       `${this.apiBaseUrl()}/v2/real-time/api/twenty-four-hr-forecast`,
+      'twentyFourHourForecast',
     );
     if (payload.code !== undefined && payload.code !== 0) {
       throw new WeatherProviderError(
-        payload.errorMsg ?? 'Weather provider returned a 24-hour forecast error',
+        payload.errorMsg ??
+          'Weather provider returned a 24-hour forecast error',
       );
     }
 
     const record = payload.data?.records?.[0];
-    const region = nearestRegionName(defaultRegions(), latitude, longitude) ?? 'central';
+    const region =
+      nearestRegionName(defaultRegions(), latitude, longitude) ?? 'central';
     return {
       low: numberOrNull(record?.general?.temperature?.low),
       high: numberOrNull(record?.general?.temperature?.high),
       periods: (record?.periods ?? [])
         .map((period) => ({
           label: period.timePeriod?.text ?? '',
-          forecast: period.regions?.[region]?.text ?? period.regions?.central?.text ?? '',
+          forecast:
+            period.regions?.[region]?.text ??
+            period.regions?.central?.text ??
+            '',
         }))
         .filter((period) => period.label && period.forecast),
       timestamp: record?.updatedTimestamp ?? record?.timestamp ?? null,
     };
   }
 
-  async fetchFourDayForecast(): Promise<{ days: DailyForecast[]; timestamp: string | null }> {
+  async fetchFourDayForecast(): Promise<{
+    days: DailyForecast[];
+    timestamp: string | null;
+  }> {
     const payload = await this.fetchJson<FourDayPayload>(
       `${this.legacyApiBaseUrl()}/v1/environment/4-day-weather-forecast`,
+      'fourDayForecast',
     );
     const item = payload.items?.[0];
     return {
@@ -341,28 +502,93 @@ export class SingaporeWeatherClient {
     return 'https://api.data.gov.sg';
   }
 
-  private async fetchJson<T>(url: string): Promise<T> {
+  /**
+   * Fetches a payload through the shared cache. Within the TTL the cached payload is returned
+   * with no upstream call. Concurrent callers for the same URL share one request. If the
+   * upstream call fails and an older payload exists, that stale payload is returned instead.
+   */
+  private async fetchJson<T>(url: string, kind: CacheKind): Promise<T> {
+    const ttl = CACHE_TTL_MS[kind];
+    const cached = this.cache.get(url);
+    if (cached && this.now() - cached.fetchedAt < ttl) {
+      return cached.payload as T;
+    }
+
+    const pending = this.inFlight.get(url);
+    if (pending) return pending as Promise<T>;
+
+    const request = this.requestJson<T>(url)
+      .then((payload) => {
+        this.cache.set(url, { payload, fetchedAt: this.now() });
+        return payload;
+      })
+      .catch((error: unknown) => {
+        if (cached) return cached.payload as T;
+        throw error;
+      })
+      .finally(() => {
+        this.inFlight.delete(url);
+      });
+
+    this.inFlight.set(url, request);
+    return request;
+  }
+
+  /** Waits until fewer than the realtime cap of calls were made in the last window. */
+  private async acquireRealtimeSlot(): Promise<void> {
+    const limit =
+      this.options.realtimeCallsPerWindow ?? REALTIME_CALLS_PER_WINDOW;
+    const windowMs = this.options.realtimeWindowMs ?? REALTIME_WINDOW_MS;
+    for (;;) {
+      const now = this.now();
+      while (this.callTimes.length > 0 && now - this.callTimes[0] >= windowMs) {
+        this.callTimes.shift();
+      }
+      if (this.callTimes.length < limit) {
+        this.callTimes.push(now);
+        return;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, windowMs - (now - this.callTimes[0])),
+      );
+    }
+  }
+
+  private async requestJson<T>(url: string): Promise<T> {
+    if (url.startsWith(this.apiBaseUrl())) await this.acquireRealtimeSlot();
+
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs ?? 8000);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      this.options.timeoutMs ?? 8000,
+    );
 
     try {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
           Accept: 'application/json',
-          'User-Agent': this.options.userAgent ?? 'weather-starter/0.1 (educational project)',
+          'User-Agent':
+            this.options.userAgent ??
+            'weather-starter/0.1 (educational project)',
           ...(this.options.apiKey ? { 'x-api-key': this.options.apiKey } : {}),
         },
       });
 
       if (!response.ok) {
         if (response.status === 429) {
-          throw new WeatherProviderError('Weather provider rate limit reached (HTTP 429)');
+          throw new WeatherProviderError(
+            'Weather provider rate limit reached (HTTP 429)',
+          );
         }
         if (response.status === 401 || response.status === 403) {
-          throw new WeatherProviderError('Weather provider rejected request (check API key)');
+          throw new WeatherProviderError(
+            'Weather provider rejected request (check API key)',
+          );
         }
-        throw new WeatherProviderError(`Weather provider returned HTTP ${response.status}`);
+        throw new WeatherProviderError(
+          `Weather provider returned HTTP ${response.status}`,
+        );
       }
 
       return (await response.json()) as T;
@@ -378,9 +604,12 @@ export class SingaporeWeatherClient {
     payload: ForecastPayload,
     latitude: number,
     longitude: number,
+    readings: SnapshotReadings = {},
   ): WeatherSnapshot {
     if (payload.code !== undefined && payload.code !== 0) {
-      throw new WeatherProviderError(payload.errorMsg ?? 'Weather provider returned an error');
+      throw new WeatherProviderError(
+        payload.errorMsg ?? 'Weather provider returned an error',
+      );
     }
 
     const root = payload.data ?? payload;
@@ -410,19 +639,19 @@ export class SingaporeWeatherClient {
         source: 'api-open.data.gov.sg',
         area: nearestArea,
         valid_period_text: latestItem.valid_period?.text ?? null,
-        temperature_c: null,
-        humidity_percent: null,
-        rainfall_mm: null,
-        wind_speed_knots: null,
+        temperature_c: readings.temperatureC ?? null,
+        humidity_percent: readings.humidityPercent ?? null,
+        rainfall_mm: readings.rainfallMm ?? null,
+        wind_speed_knots: readings.windSpeedKnots ?? null,
         wind_direction_degrees: null,
-        forecast_low_c: null,
-        forecast_high_c: null,
-        uv_index: null,
-        psi_twenty_four_hourly: null,
-        pm25_one_hourly: null,
-        air_quality_region: null,
-        forecast_periods: [],
-        daily_forecast: [],
+        forecast_low_c: readings.forecastLowC ?? null,
+        forecast_high_c: readings.forecastHighC ?? null,
+        uv_index: readings.uvIndex ?? null,
+        psi_twenty_four_hourly: readings.psiTwentyFourHourly ?? null,
+        pm25_one_hourly: readings.pm25OneHourly ?? null,
+        air_quality_region: readings.airQualityRegion ?? null,
+        forecast_periods: readings.forecastPeriods ?? [],
+        daily_forecast: readings.dailyForecast ?? [],
       };
     }
 
@@ -433,42 +662,19 @@ export class SingaporeWeatherClient {
       source: 'api-open.data.gov.sg',
       area: fallback.area ?? null,
       valid_period_text: latestItem.valid_period?.text ?? null,
-      temperature_c: null,
-      humidity_percent: null,
-      rainfall_mm: null,
-      wind_speed_knots: null,
+      temperature_c: readings.temperatureC ?? null,
+      humidity_percent: readings.humidityPercent ?? null,
+      rainfall_mm: readings.rainfallMm ?? null,
+      wind_speed_knots: readings.windSpeedKnots ?? null,
       wind_direction_degrees: null,
-      forecast_low_c: null,
-      forecast_high_c: null,
-      uv_index: null,
-      psi_twenty_four_hourly: null,
-      pm25_one_hourly: null,
-      air_quality_region: null,
-      forecast_periods: [],
-      daily_forecast: [],
-    };
-  }
-
-  private emptyForecastSnapshot(): WeatherSnapshot {
-    return {
-      condition: 'Unavailable',
-      observed_at: '',
-      source: 'api-open.data.gov.sg',
-      area: null,
-      valid_period_text: null,
-      temperature_c: null,
-      humidity_percent: null,
-      rainfall_mm: null,
-      wind_speed_knots: null,
-      wind_direction_degrees: null,
-      forecast_low_c: null,
-      forecast_high_c: null,
-      uv_index: null,
-      psi_twenty_four_hourly: null,
-      pm25_one_hourly: null,
-      air_quality_region: null,
-      forecast_periods: [],
-      daily_forecast: [],
+      forecast_low_c: readings.forecastLowC ?? null,
+      forecast_high_c: readings.forecastHighC ?? null,
+      uv_index: readings.uvIndex ?? null,
+      psi_twenty_four_hourly: readings.psiTwentyFourHourly ?? null,
+      pm25_one_hourly: readings.pm25OneHourly ?? null,
+      air_quality_region: readings.airQualityRegion ?? null,
+      forecast_periods: readings.forecastPeriods ?? [],
+      daily_forecast: readings.dailyForecast ?? [],
     };
   }
 }
@@ -526,7 +732,12 @@ function nearestStation(
   for (const station of stations) {
     const lat = Number(station.location?.latitude);
     const lon = Number(station.location?.longitude);
-    if (!station.id || Number.isNaN(lat) || Number.isNaN(lon) || !valueByStation.has(station.id))
+    if (
+      !station.id ||
+      Number.isNaN(lat) ||
+      Number.isNaN(lon) ||
+      !valueByStation.has(station.id)
+    )
       continue;
 
     const distance = (lat - latitude) ** 2 + (lon - longitude) ** 2;
@@ -559,12 +770,14 @@ function valueForRegion(
   return numberOrNull(values[region]);
 }
 
-
 function defaultRegions(): RegionMetadata[] {
   return [
     { name: 'west', labelLocation: { latitude: 1.35735, longitude: 103.7 } },
     { name: 'north', labelLocation: { latitude: 1.41803, longitude: 103.82 } },
-    { name: 'central', labelLocation: { latitude: 1.35735, longitude: 103.82 } },
+    {
+      name: 'central',
+      labelLocation: { latitude: 1.35735, longitude: 103.82 },
+    },
     { name: 'south', labelLocation: { latitude: 1.29587, longitude: 103.82 } },
     { name: 'east', labelLocation: { latitude: 1.35735, longitude: 103.94 } },
   ];
