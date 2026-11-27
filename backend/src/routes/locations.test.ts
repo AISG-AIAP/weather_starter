@@ -23,7 +23,14 @@ const weather: WeatherSnapshot = {
   pm25_one_hourly: 9,
   air_quality_region: 'central',
   forecast_periods: [{ label: 'Now', forecast: 'Cloudy' }],
-  daily_forecast: [{ date: '2026-05-04', forecast: 'Cloudy', temperature_low_c: 25, temperature_high_c: 32 }],
+  daily_forecast: [
+    {
+      date: '2026-05-04',
+      forecast: 'Cloudy',
+      temperature_low_c: 25,
+      temperature_high_c: 32,
+    },
+  ],
 };
 
 describe('locations API', () => {
@@ -85,7 +92,9 @@ describe('locations API', () => {
     await request(app).delete(`/api/locations/${id}`).expect(204);
 
     const listResponse = await request(app).get('/api/locations').expect(200);
-    expect(listResponse.body.locations.map((l: { id: number }) => l.id)).not.toContain(id);
+    expect(
+      listResponse.body.locations.map((l: { id: number }) => l.id),
+    ).not.toContain(id);
 
     await request(app).delete(`/api/locations/${id}`).expect(404);
   });

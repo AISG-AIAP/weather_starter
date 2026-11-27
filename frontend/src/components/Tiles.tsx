@@ -1,4 +1,11 @@
-import { CloudIcon, DropletIcon, SunIcon, ThermometerIcon, TrendIcon, WindIcon } from './icons';
+import {
+  CloudIcon,
+  DropletIcon,
+  SunIcon,
+  ThermometerIcon,
+  TrendIcon,
+  WindIcon,
+} from './icons';
 import type { ReactNode } from 'react';
 import type { WeatherSnapshot } from '../types';
 
@@ -84,7 +91,9 @@ export function AirQualityTile({ weather }: WeatherProps) {
       title="Air Quality"
       className="col-span-2"
     >
-      <div className="text-4xl font-light leading-none text-white/95">{psi}</div>
+      <div className="text-4xl font-light leading-none text-white/95">
+        {psi}
+      </div>
       <div className="mt-1 text-base text-white/85">
         {airQualityLabel(weather?.psi_twenty_four_hourly)}
       </div>
@@ -119,7 +128,9 @@ export function WindTile({ weather }: WeatherProps) {
           {hasDirection && (
             <li className="flex justify-between">
               <span className="text-white/75">Direction</span>
-              <span className="tabular-nums text-white/90">{direction}&deg;</span>
+              <span className="tabular-nums text-white/90">
+                {direction}&deg;
+              </span>
             </li>
           )}
         </ul>
@@ -139,7 +150,9 @@ function Compass({ speed, direction }: CompassProps) {
 
   return (
     <div className="relative h-20 w-20 rounded-full border border-white/20 bg-white/[0.04]">
-      <span className="absolute left-1/2 top-1 -translate-x-1/2 text-[10px] text-white/55">N</span>
+      <span className="absolute left-1/2 top-1 -translate-x-1/2 text-[10px] text-white/55">
+        N
+      </span>
       <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-white/55">
         E
       </span>
@@ -156,7 +169,9 @@ function Compass({ speed, direction }: CompassProps) {
         />
       )}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-base font-light leading-none text-white/90">{speed}</span>
+        <span className="text-base font-light leading-none text-white/90">
+          {speed}
+        </span>
         <span className="text-[10px] text-white/55">km/h</span>
       </div>
     </div>
@@ -178,13 +193,17 @@ export function UVTile({ weather }: WeatherProps) {
       <div className="text-4xl font-light leading-none text-white/95">
         {formatNumber(weather?.uv_index)}
       </div>
-      <div className="mt-1 text-base text-white/85">{uvLabel(weather?.uv_index)}</div>
+      <div className="mt-1 text-base text-white/85">
+        {uvLabel(weather?.uv_index)}
+      </div>
       <ScaleBar
         value={weather?.uv_index}
         max={11}
         gradientClass="bg-gradient-to-r from-emerald-400 via-yellow-300 via-orange-400 to-fuchsia-500"
       />
-      <p className="mt-3 text-xs leading-snug text-white/70">Latest nationwide UVI reading.</p>
+      <p className="mt-3 text-xs leading-snug text-white/70">
+        Latest nationwide UVI reading.
+      </p>
     </TileShell>
   );
 }
@@ -209,7 +228,9 @@ export function PrecipitationTile({ weather }: WeatherProps) {
         {formatNumber(weather?.rainfall_mm, 1)} mm
       </div>
       <div className="mt-1 text-sm text-white/85">Latest reading</div>
-      <p className="mt-3 text-xs leading-snug text-white/70">Nearest realtime rainfall station.</p>
+      <p className="mt-3 text-xs leading-snug text-white/70">
+        Nearest realtime rainfall station.
+      </p>
     </TileShell>
   );
 }
@@ -220,7 +241,9 @@ export function HumidityTile({ weather }: WeatherProps) {
       <div className="text-4xl font-light leading-none tabular-nums text-white/95">
         {formatNumber(weather?.humidity_percent)}%
       </div>
-      <p className="mt-3 text-xs leading-snug text-white/70">Nearest realtime humidity station.</p>
+      <p className="mt-3 text-xs leading-snug text-white/70">
+        Nearest realtime humidity station.
+      </p>
     </TileShell>
   );
 }
@@ -237,7 +260,9 @@ export function AveragesTile({ weather }: WeatherProps) {
       <ul className="mt-3 space-y-1 text-xs text-white/70">
         <li className="flex justify-between border-t border-white/10 pt-1.5">
           <span>Today</span>
-          <span className="tabular-nums">H:{formatTemperature(weather?.forecast_high_c)}&deg;</span>
+          <span className="tabular-nums">
+            H:{formatTemperature(weather?.forecast_high_c)}&deg;
+          </span>
         </li>
       </ul>
     </TileShell>

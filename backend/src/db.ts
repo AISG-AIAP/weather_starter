@@ -37,7 +37,8 @@ const defaultWeather: WeatherSnapshot = {
   daily_forecast: [],
 };
 
-const databasePath = process.env.DATABASE_PATH ?? join(process.cwd(), 'backend', 'weather.db');
+const databasePath =
+  process.env.DATABASE_PATH ?? join(process.cwd(), 'backend', 'weather.db');
 mkdirSync(dirname(databasePath), { recursive: true });
 
 const sqlite = new DatabaseSync(databasePath);
@@ -56,15 +57,24 @@ await migrate(
 
 export async function listLocations(): Promise<LocationRecord[]> {
   return (
-    await db.select().from(locations).orderBy(desc(locations.createdAt), desc(locations.id)).all()
+    await db
+      .select()
+      .from(locations)
+      .orderBy(desc(locations.createdAt), desc(locations.id))
+      .all()
   ).map(rowToRecord);
 }
 
-export async function createLocation(latitude: number, longitude: number): Promise<LocationRecord> {
+export async function createLocation(
+  latitude: number,
+  longitude: number,
+): Promise<LocationRecord> {
   const duplicate = await db
     .select({ id: locations.id })
     .from(locations)
-    .where(and(eq(locations.latitude, latitude), eq(locations.longitude, longitude)))
+    .where(
+      and(eq(locations.latitude, latitude), eq(locations.longitude, longitude)),
+    )
     .get();
 
   if (duplicate) {
@@ -90,7 +100,11 @@ export async function createLocation(latitude: number, longitude: number): Promi
 }
 
 export async function getLocation(id: number): Promise<LocationRecord | null> {
-  const row = await db.select().from(locations).where(eq(locations.id, id)).get();
+  const row = await db
+    .select()
+    .from(locations)
+    .where(eq(locations.id, id))
+    .get();
   return row ? rowToRecord(row) : null;
 }
 
@@ -109,7 +123,12 @@ export async function updateWeather(
   weather: WeatherSnapshot,
 ): Promise<LocationRecord | null> {
   const columns = weatherToColumns(weather);
-  const row = await db.update(locations).set(columns).where(eq(locations.id, id)).returning().get();
+  const row = await db
+    .update(locations)
+    .set(columns)
+    .where(eq(locations.id, id))
+    .returning()
+    .get();
 
   return row ? rowToRecord(row) : null;
 }
@@ -187,8 +206,12 @@ async function sqliteCallback(
     return { rows: [] };
   }
   if (method === 'get') {
-    const row = statement.get(...bindings) as Record<string, unknown> | undefined;
-    return { rows: row ? Object.values(row) : (undefined as unknown as unknown[]) };
+    const row = statement.get(...bindings) as
+      | Record<string, unknown>
+      | undefined;
+    return {
+      rows: row ? Object.values(row) : (undefined as unknown as unknown[]),
+    };
   }
   const rows = statement.all(...bindings) as Record<string, unknown>[];
   if (method === 'values') {

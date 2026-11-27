@@ -165,10 +165,7 @@
       "indexes": {
         "locations_latitude_longitude_unique": {
           "name": "locations_latitude_longitude_unique",
-          "columns": [
-            "latitude",
-            "longitude"
-          ],
+          "columns": ["latitude", "longitude"],
           "isUnique": true
         }
       },

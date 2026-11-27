@@ -17,7 +17,9 @@ function labelForDate(date: string, index: number): string {
 }
 
 function formatTemperature(value: number | null | undefined): string {
-  return typeof value === 'number' && Number.isFinite(value) ? `${Math.round(value)}°` : '--°';
+  return typeof value === 'number' && Number.isFinite(value)
+    ? `${Math.round(value)}°`
+    : '--°';
 }
 
 function isFiniteNumber(value: number | null | undefined): value is number {
@@ -26,7 +28,9 @@ function isFiniteNumber(value: number | null | undefined): value is number {
 
 function computeWeekRange(days: DailyForecast[]): WeekRange | null {
   const lows = days.map((day) => day.temperature_low_c).filter(isFiniteNumber);
-  const highs = days.map((day) => day.temperature_high_c).filter(isFiniteNumber);
+  const highs = days
+    .map((day) => day.temperature_high_c)
+    .filter(isFiniteNumber);
   if (lows.length === 0 || highs.length === 0) return null;
   const min = Math.min(...lows);
   const max = Math.max(...highs);
@@ -65,7 +69,9 @@ export function TenDayForecast({ weather }: TenDayForecastProps) {
                 key={day.date}
                 className="grid grid-cols-[5rem_2rem_3rem_1fr_3rem] items-center gap-3 px-4 py-3 text-sm"
               >
-                <span className="font-medium text-white/95">{labelForDate(day.date, index)}</span>
+                <span className="font-medium text-white/95">
+                  {labelForDate(day.date, index)}
+                </span>
                 <CloudIcon className="h-5 w-5 text-white/80" />
                 <span className="tabular-nums text-white/60">
                   {formatTemperature(day.temperature_low_c)}
@@ -74,7 +80,10 @@ export function TenDayForecast({ weather }: TenDayForecastProps) {
                   {offsets && (
                     <div
                       className="absolute top-0 h-1.5 rounded-full bg-gradient-to-r from-sky-300/80 via-amber-300/70 to-orange-300/80"
-                      style={{ left: `${offsets.left}%`, right: `${offsets.right}%` }}
+                      style={{
+                        left: `${offsets.left}%`,
+                        right: `${offsets.right}%`,
+                      }}
                     />
                   )}
                 </div>
@@ -90,7 +99,9 @@ export function TenDayForecast({ weather }: TenDayForecastProps) {
             );
           })
         ) : (
-          <li className="px-4 py-4 text-sm text-white/55">Forecast unavailable.</li>
+          <li className="px-4 py-4 text-sm text-white/55">
+            Forecast unavailable.
+          </li>
         )}
       </ul>
     </section>

@@ -3,7 +3,10 @@ import express from 'express';
 import pinoHttpModule from 'pino-http';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createLocationsRouter, type WeatherClient } from './routes/locations.js';
+import {
+  createLocationsRouter,
+  type WeatherClient,
+} from './routes/locations.js';
 import { logger } from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,8 +21,10 @@ interface AppOptions {
 
 export async function createApp(options: AppOptions = {}) {
   const app = express();
-  const serveFrontend = options.serveFrontend ?? process.env.NODE_ENV !== 'test';
-  const enableRequestLogging = options.enableRequestLogging ?? process.env.NODE_ENV !== 'test';
+  const serveFrontend =
+    options.serveFrontend ?? process.env.NODE_ENV !== 'test';
+  const enableRequestLogging =
+    options.enableRequestLogging ?? process.env.NODE_ENV !== 'test';
 
   if (enableRequestLogging) {
     app.use(pinoHttp({ logger }));
@@ -42,15 +47,22 @@ export async function createApp(options: AppOptions = {}) {
       {
         source: 'frontend',
         event,
-        metadata: metadata && typeof metadata === 'object' ? metadata : undefined,
-        page: typeof request.body?.page === 'string' ? request.body.page : undefined,
+        metadata:
+          metadata && typeof metadata === 'object' ? metadata : undefined,
+        page:
+          typeof request.body?.page === 'string'
+            ? request.body.page
+            : undefined,
       },
       'frontend interaction',
     );
     response.status(204).end();
   });
 
-  app.use('/api', createLocationsRouter({ weatherClient: options.weatherClient }));
+  app.use(
+    '/api',
+    createLocationsRouter({ weatherClient: options.weatherClient }),
+  );
 
   if (serveFrontend) {
     if (process.env.NODE_ENV === 'production') {
@@ -90,6 +102,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const app = await createApp();
 
   app.listen(port, '127.0.0.1', () => {
-    logger.info({ url: `http://127.0.0.1:${port}` }, 'Weather Starter listening');
+    logger.info(
+      { url: `http://127.0.0.1:${port}` },
+      'Weather Starter listening',
+    );
   });
 }

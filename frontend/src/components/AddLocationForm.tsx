@@ -22,11 +22,16 @@ export function AddLocationForm() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await create({ latitude: Number(latitude), longitude: Number(longitude) });
+      await create({
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+      });
       setLatitude('');
       setLongitude('');
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not add location');
+      setSubmitError(
+        err instanceof Error ? err.message : 'Could not add location',
+      );
     } finally {
       setSubmitting(false);
     }

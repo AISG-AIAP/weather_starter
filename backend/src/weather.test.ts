@@ -7,8 +7,14 @@ const forecastPayload = {
   code: 0,
   data: {
     area_metadata: [
-      { name: 'Bishan', label_location: { latitude: 1.350772, longitude: 103.839 } },
-      { name: 'Bedok', label_location: { latitude: 1.321, longitude: 103.924 } },
+      {
+        name: 'Bishan',
+        label_location: { latitude: 1.350772, longitude: 103.839 },
+      },
+      {
+        name: 'Bedok',
+        label_location: { latitude: 1.321, longitude: 103.924 },
+      },
     ],
     items: [
       {
@@ -28,7 +34,11 @@ const humidityPayload = {
   code: 0,
   data: {
     stations: [
-      { id: 'S109', name: 'Ang Mo Kio Avenue 5', location: { latitude: 1.3793, longitude: 103.85 } },
+      {
+        id: 'S109',
+        name: 'Ang Mo Kio Avenue 5',
+        location: { latitude: 1.3793, longitude: 103.85 },
+      },
     ],
     readings: [
       {
@@ -42,16 +52,38 @@ const humidityPayload = {
 const rainfallPayload = {
   code: 0,
   data: {
-    stations: [{ id: 'S109', name: 'Ang Mo Kio Avenue 5', location: { latitude: 1.3793, longitude: 103.85 } }],
-    readings: [{ timestamp: '2026-11-21T22:43:00+08:00', data: [{ stationId: 'S109', value: 0.4 }] }],
+    stations: [
+      {
+        id: 'S109',
+        name: 'Ang Mo Kio Avenue 5',
+        location: { latitude: 1.3793, longitude: 103.85 },
+      },
+    ],
+    readings: [
+      {
+        timestamp: '2026-11-21T22:43:00+08:00',
+        data: [{ stationId: 'S109', value: 0.4 }],
+      },
+    ],
   },
 };
 
 const windSpeedPayload = {
   code: 0,
   data: {
-    stations: [{ id: 'S109', name: 'Ang Mo Kio Avenue 5', location: { latitude: 1.3793, longitude: 103.85 } }],
-    readings: [{ timestamp: '2026-11-21T22:43:00+08:00', data: [{ stationId: 'S109', value: 6 }] }],
+    stations: [
+      {
+        id: 'S109',
+        name: 'Ang Mo Kio Avenue 5',
+        location: { latitude: 1.3793, longitude: 103.85 },
+      },
+    ],
+    readings: [
+      {
+        timestamp: '2026-11-21T22:43:00+08:00',
+        data: [{ stationId: 'S109', value: 6 }],
+      },
+    ],
   },
 };
 
@@ -71,8 +103,16 @@ const airTemperaturePayload = {
   code: 0,
   data: {
     stations: [
-      { id: 'S109', name: 'Ang Mo Kio Avenue 5', location: { latitude: 1.3793, longitude: 103.85 } },
-      { id: 'S106', name: 'Pulau Ubin', location: { latitude: 1.4168, longitude: 103.9673 } },
+      {
+        id: 'S109',
+        name: 'Ang Mo Kio Avenue 5',
+        location: { latitude: 1.3793, longitude: 103.85 },
+      },
+      {
+        id: 'S106',
+        name: 'Pulau Ubin',
+        location: { latitude: 1.4168, longitude: 103.9673 },
+      },
     ],
     readings: [
       {
@@ -97,7 +137,9 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       response.writeHead(status, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify(body));
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, '127.0.0.1', resolve),
+    );
     const { port } = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${port}`;
   });
@@ -157,7 +199,8 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
     const hits: string[] = [];
     respond = (path) => {
       hits.push(path);
-      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/two-hr-forecast')
+        return { status: 200, body: forecastPayload };
       return { status: 200, body: airTemperaturePayload };
     };
     let clock = 1_000_000;
@@ -180,7 +223,8 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
     const hits: string[] = [];
     respond = (path) => {
       hits.push(path);
-      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/two-hr-forecast')
+        return { status: 200, body: forecastPayload };
       return { status: 200, body: airTemperaturePayload };
     };
     const shared = new SingaporeWeatherClient({
@@ -195,7 +239,9 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       shared.getCurrentWeather(1.3, 103.8),
     ]);
 
-    const forecastCalls = hits.filter((path) => path === '/v2/real-time/api/two-hr-forecast');
+    const forecastCalls = hits.filter(
+      (path) => path === '/v2/real-time/api/two-hr-forecast',
+    );
     expect(forecastCalls).toHaveLength(1);
   });
 
@@ -203,7 +249,8 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
     let failing = false;
     respond = (path) => {
       if (failing) return { status: 500, body: {} };
-      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/two-hr-forecast')
+        return { status: 200, body: forecastPayload };
       return { status: 200, body: airTemperaturePayload };
     };
     let clock = 1_000_000;
@@ -225,8 +272,10 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
 
   it('keeps the stored value for a field whose endpoint fails', async () => {
     respond = (path) => {
-      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
-      if (path === '/v2/real-time/api/air-temperature') return { status: 200, body: airTemperaturePayload };
+      if (path === '/v2/real-time/api/two-hr-forecast')
+        return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/air-temperature')
+        return { status: 200, body: airTemperaturePayload };
       return { status: 500, body: {} };
     };
 
@@ -247,7 +296,8 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
   it('limits realtime calls to the window cap and waits instead of sending a 7th', async () => {
     const hits: number[] = [];
     respond = (path) => {
-      if (path === '/v2/real-time/api/two-hr-forecast') return { status: 200, body: forecastPayload };
+      if (path === '/v2/real-time/api/two-hr-forecast')
+        return { status: 200, body: forecastPayload };
       return { status: 200, body: airTemperaturePayload };
     };
     const limited = new SingaporeWeatherClient({
@@ -257,7 +307,10 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       realtimeWindowMs: 200,
     });
     const realFetch = globalThis.fetch;
-    globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    globalThis.fetch = (async (
+      input: Parameters<typeof fetch>[0],
+      init?: RequestInit,
+    ) => {
       if (String(input).includes(baseUrl)) hits.push(Date.now());
       return realFetch(input, init);
     }) as typeof fetch;
@@ -270,7 +323,9 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
 
     // Any 200 ms window must hold at most 3 realtime calls.
     for (let i = 0; i < hits.length; i++) {
-      const inWindow = hits.filter((t) => t >= hits[i] && t < hits[i] + 200).length;
+      const inWindow = hits.filter(
+        (t) => t >= hits[i] && t < hits[i] + 200,
+      ).length;
       expect(inWindow).toBeLessThanOrEqual(3);
     }
     expect(hits.length).toBeGreaterThan(3);
@@ -278,14 +333,19 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
 
   it('throws WeatherProviderError when the provider returns HTTP 500', async () => {
     respond = () => ({ status: 500, body: {} });
-    await expect(client().getCurrentWeather(1.35, 103.85)).rejects.toBeInstanceOf(
-      WeatherProviderError,
-    );
+    await expect(
+      client().getCurrentWeather(1.35, 103.85),
+    ).rejects.toBeInstanceOf(WeatherProviderError);
   });
 
   it('throws WeatherProviderError when the provider reports an error code', async () => {
-    respond = () => ({ status: 200, body: { code: 24, errorMsg: 'rate limited' } });
-    await expect(client().getCurrentWeather(1.35, 103.85)).rejects.toThrow('rate limited');
+    respond = () => ({
+      status: 200,
+      body: { code: 24, errorMsg: 'rate limited' },
+    });
+    await expect(client().getCurrentWeather(1.35, 103.85)).rejects.toThrow(
+      'rate limited',
+    );
   });
 
   it('throws WeatherProviderError when the provider is unreachable', async () => {
@@ -293,8 +353,8 @@ describe('SingaporeWeatherClient.getCurrentWeather', () => {
       baseUrl: 'http://127.0.0.1:1',
       timeoutMs: 2000,
     });
-    await expect(unreachable.getCurrentWeather(1.35, 103.85)).rejects.toBeInstanceOf(
-      WeatherProviderError,
-    );
+    await expect(
+      unreachable.getCurrentWeather(1.35, 103.85),
+    ).rejects.toBeInstanceOf(WeatherProviderError);
   });
 });
